@@ -1,5 +1,5 @@
 import { motion } from "motion/react";
-import { Shield, Building2, MapPin, Brain, Users, Globe } from "lucide-react";
+import { Building2, Globe, Zap } from "lucide-react";
 import { useNavigate } from "react-router";
 import { Button } from "../components/ui/button";
 
@@ -35,48 +35,45 @@ export default function Landing() {
           animate={{ opacity: 1, y: 0 }}
           className="text-center mb-16"
         >
-          <div className="flex items-center justify-center gap-3 mb-4">
+          {/* THOR Brand */}
+          <div className="flex items-center justify-center gap-4 mb-3">
             <motion.div
-              animate={{
-                rotate: [0, 360],
-              }}
-              transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+              animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
             >
-              <Shield className="w-12 h-12 text-blue-600" />
+              <Zap className="w-14 h-14 text-yellow-500 drop-shadow-lg" fill="currentColor" />
             </motion.div>
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-              GuardianAI
+            <h1 className="text-7xl font-black tracking-widest bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 bg-clip-text text-transparent drop-shadow-sm">
+              THOR
             </h1>
-          </div>
-          <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-            Next-generation tourist safety platform powered by artificial intelligence
-          </p>
-        </motion.div>
-
-        {/* Features Grid */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid md:grid-cols-3 gap-6 mb-16"
-        >
-          {[
-            { icon: MapPin, title: "Smart Navigation", desc: "AI-powered safe routes" },
-            { icon: Brain, title: "AI Concierge", desc: "24/7 intelligent assistance" },
-            { icon: Users, title: "Community Support", desc: "Global safety network" },
-          ].map((feature, idx) => (
             <motion.div
-              key={idx}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + idx * 0.1 }}
-              className="bg-white/70 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-xl transition-all"
+              animate={{ scale: [1, 1.15, 1], rotate: [0, -8, 8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: 0.3 }}
             >
-              <feature.icon className="w-8 h-8 text-blue-600 mb-3" />
-              <h3 className="font-semibold text-lg mb-2">{feature.title}</h3>
-              <p className="text-slate-600 text-sm">{feature.desc}</p>
+              <Zap className="w-14 h-14 text-yellow-500 drop-shadow-lg" fill="currentColor" />
             </motion.div>
-          ))}
+          </div>
+
+          {/* "god of thunder" — small, struck through */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4 }}
+            className="text-sm text-slate-400 line-through tracking-widest uppercase mb-4"
+          >
+            god of thunder
+          </motion.p>
+
+          {/* Big Tagline */}
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.6 }}
+            className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent max-w-xl mx-auto leading-tight"
+          >
+            Guard of Tourism
+          </motion.p>
+
         </motion.div>
 
         {/* Mode Selection */}
@@ -89,7 +86,7 @@ export default function Landing() {
           <h2 className="text-3xl font-bold text-center mb-8 text-slate-800">
             Choose Your Mode
           </h2>
-          
+
           <div className="grid md:grid-cols-2 gap-8">
             {/* Tourist Mode */}
             <motion.div
@@ -107,7 +104,7 @@ export default function Landing() {
                     <p className="text-slate-600 text-sm">For individual travelers</p>
                   </div>
                 </div>
-                
+
                 <ul className="space-y-3 mb-8">
                   {[
                     "Real-time safety monitoring",
@@ -124,7 +121,7 @@ export default function Landing() {
                 </ul>
 
                 <Button
-                  onClick={() => navigate("/tourist/destination")}
+                  onClick={() => navigate("/tourist/login")}
                   className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-6 rounded-xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
                 >
                   Start as Tourist
@@ -148,7 +145,7 @@ export default function Landing() {
                     <p className="text-slate-600 text-sm">For travel companies</p>
                   </div>
                 </div>
-                
+
                 <ul className="space-y-3 mb-8">
                   {[
                     "Multi-tourist monitoring",
@@ -175,28 +172,6 @@ export default function Landing() {
           </div>
         </motion.div>
 
-        {/* Footer Stats */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-16 text-center"
-        >
-          <div className="flex justify-center gap-12 flex-wrap">
-            {[
-              { label: "Active Users", value: "250K+" },
-              { label: "Countries", value: "180+" },
-              { label: "Lives Protected", value: "1M+" },
-            ].map((stat, idx) => (
-              <div key={idx}>
-                <div className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  {stat.value}
-                </div>
-                <div className="text-slate-600 text-sm">{stat.label}</div>
-              </div>
-            ))}
-          </div>
-        </motion.div>
       </div>
     </div>
   );

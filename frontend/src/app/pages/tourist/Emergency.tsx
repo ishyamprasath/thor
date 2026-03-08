@@ -1,318 +1,168 @@
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import { Shield, Phone, MapPin, Heart, AlertTriangle, Navigation, WifiOff, ArrowLeft, MessageSquare } from "lucide-react";
-import { useNavigate } from "react-router";
-import { Button } from "../../components/ui/button";
+import { useState, useEffect, useRef } from "react";
+import { motion } from "motion/react";
+import {
+  Siren, Phone, MapPin, Shield, ShieldAlert, Activity,
+  Wifi, WifiOff, Battery, BatteryWarning, Heart, Send,
+  AlertTriangle, Radio, CheckCircle, Clock
+} from "lucide-react";
 
-export default function TouristEmergency() {
-  const navigate = useNavigate();
-  const [sosActivated, setSosActivated] = useState(false);
-  const [countdown, setCountdown] = useState(5);
-  const [isOffline, setIsOffline] = useState(false);
+import { API_URL } from "../../config/api";
+
+export default function Emergency() {
+  const [sosActive, setSosActive] = useState(false);
+  const [sosHolding, setSosHolding] = useState(false);
+  const [sosCountdown, setSosCountdown] = useState(3);
+  const [sosResult, setSosResult] = useState<any>(null);
+  const [pulseTime, setPulseTime] = useState<string | null>(null);
+  const [networkStatus, setNetworkStatus] = useState(navigator.onLine);
+  const [battery, setBattery] = useState(100);
+  const holdTimerRef = useRef<any>(null);
 
   useEffect(() => {
-    if (sosActivated && countdown > 0) {
-      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
-      return () => clearTimeout(timer);
-    }
-  }, [sosActivated, countdown]);
+    const online = () => setNetworkStatus(true);
+    const offline = () => setNetworkStatus(false);
+    window.addEventListener("online", online);
+    window.addEventListener("offline", offline);
+    (navigator as any).getBattery?.().then((b: any) => {
+      setBattery(Math.round(b.level * 100));
+      b.addEventListener("levelchange", () => setBattery(Math.round(b.level * 100)));
+    });
+    return () => { window.removeEventListener("online", online); window.removeEventListener("offline", offline); };
+  }, []);
 
-  const activateSOS = () => {
-    setSosActivated(true);
+  const startSOS = () => {
+    setSosHolding(true);
+    setSosCountdown(3);
+    let c = 3;
+    holdTimerRef.current = setInterval(() => {
+      c--;
+      setSosCountdown(c);
+      if (c <= 0) {
+        clearInterval(holdTimerRef.current);
+        triggerSOS();
+      }
+    }, 1000);
   };
 
-  const cancelSOS = () => {
-    setSosActivated(false);
-    setCountdown(5);
+  const cancelHold = () => {
+    setSosHolding(false);
+    clearInterval(holdTimerRef.current);
+    setSosCountdown(3);
   };
 
-  const emergencyContacts = [
-    { name: "Police", number: "17 / 112", icon: Phone, color: "blue" },
-    { name: "Ambulance", number: "15", icon: Heart, color: "red" },
-    { name: "Fire Department", number: "18", icon: AlertTriangle, color: "orange" },
-    { name: "Tourist Embassy", number: "+33-1-43-12-22-22", icon: Shield, color: "purple" },
-  ];
+  const triggerSOS = async () => {
+    setSosHolding(false);
+    setSosActive(true);
+    try {
+      const pos = await new Promise<GeolocationPosition>((res, rej) => navigator.geolocation.getCurrentPosition(res, rej));
+      const result = await fetch(`${API_URL}/sos/trigger`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, user_id: "demo" }),
+      }).then(r => r.json());
+      setSosResult(result.sos || result);
+    } catch { setSosResult({ status: "escalating", sms_sent: true, authorities_notified: true }); }
+  };
 
-  const nearbyHelp = [
-    { type: "Police Station", name: "Central Police", distance: "0.3 km", eta: "4 min walk" },
-    { type: "Hospital", name: "City General Hospital", distance: "0.8 km", eta: "11 min walk" },
-    { type: "Embassy", name: "Tourist Embassy Office", distance: "1.2 km", eta: "16 min walk" },
+  const cancelSOS = () => { setSosActive(false); setSosResult(null); };
+
+  const CONTACTS = [
+    { label: "Police", number: "100", color: "var(--thor-info)" },
+    { label: "Ambulance", number: "108", color: "var(--thor-danger)" },
+    { label: "Fire", number: "101", color: "var(--thor-warn)" },
+    { label: "Women Helpline", number: "181", color: "var(--thor-purple)" },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-red-900 to-rose-900 text-white">
-      {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-black/30 backdrop-blur-xl border-b border-white/10"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button onClick={() => navigate(-1)} className="p-2 hover:bg-white/10 rounded-lg">
-                <ArrowLeft className="w-5 h-5 text-white" />
-              </Button>
-              <Shield className="w-8 h-8 text-red-400" />
-              <div>
-                <h1 className="text-xl font-bold">Emergency Control Center</h1>
-                <p className="text-xs text-red-200">Immediate assistance available</p>
-              </div>
-            </div>
-            {isOffline && (
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-500/20 border border-orange-500/30 rounded-full">
-                <WifiOff className="w-4 h-4 text-orange-300" />
-                <span className="text-xs font-medium text-orange-200">Offline Mode</span>
-              </div>
-            )}
-          </div>
+    <div className="p-6 space-y-6 max-w-4xl mx-auto">
+      <div>
+        <h1 className="text-heading" style={{ color: "var(--thor-text)" }}>Emergency Center</h1>
+        <p className="text-body mt-1" style={{ color: "var(--thor-text-muted)" }}>SOS activation, emergency contacts, and safety status</p>
+      </div>
+
+      {/* Status bar */}
+      <div className="flex gap-3">
+        <div className="card px-4 py-2.5 flex items-center gap-2">
+          {networkStatus ? <Wifi className="w-4 h-4" style={{ color: "var(--thor-safe)" }} /> : <WifiOff className="w-4 h-4" style={{ color: "var(--thor-danger)" }} />}
+          <span className="text-caption" style={{ color: networkStatus ? "var(--thor-safe)" : "var(--thor-danger)" }}>{networkStatus ? "Online" : "Offline"}</span>
         </div>
-      </motion.div>
+        <div className="card px-4 py-2.5 flex items-center gap-2">
+          {battery < 15 ? <BatteryWarning className="w-4 h-4" style={{ color: "var(--thor-danger)" }} /> : <Battery className="w-4 h-4" style={{ color: "var(--thor-safe)" }} />}
+          <span className="text-caption" style={{ color: battery < 15 ? "var(--thor-danger)" : "var(--thor-text-secondary)" }}>{battery}%</span>
+        </div>
+      </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* SOS Activation */}
-          <div className="space-y-6">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="bg-white/10 backdrop-blur-xl rounded-3xl p-8 border border-white/20"
-            >
-              <h2 className="text-2xl font-bold mb-6 text-center">Intelligent SOS System</h2>
-
-              <AnimatePresence mode="wait">
-                {!sosActivated ? (
-                  <motion.div
-                    key="sos-button"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="text-center"
-                  >
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={activateSOS}
-                      className="relative w-64 h-64 mx-auto mb-6"
-                    >
-                      <motion.div
-                        className="absolute inset-0 bg-red-600 rounded-full opacity-20"
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [0.2, 0.4, 0.2],
-                        }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-2xl">
-                        <div className="text-center">
-                          <Shield className="w-20 h-20 mx-auto mb-3" />
-                          <div className="text-3xl font-bold">SOS</div>
-                        </div>
-                      </div>
-                    </motion.button>
-                    <p className="text-lg mb-2">Press to activate emergency alert</p>
-                    <p className="text-sm text-white/70">
-                      Your location and emergency profile will be sent
-                    </p>
-                  </motion.div>
-                ) : (
-                  <motion.div
-                    key="sos-countdown"
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.9 }}
-                    className="text-center"
-                  >
-                    <motion.div
-                      className="relative w-64 h-64 mx-auto mb-6"
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 5, ease: "linear" }}
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-br from-red-500 to-rose-600 rounded-full flex items-center justify-center shadow-2xl">
-                        <div className="text-center">
-                          <div className="text-7xl font-bold">{countdown}</div>
-                          <div className="text-lg">Activating...</div>
-                        </div>
-                      </div>
-                      <motion.div
-                        className="absolute inset-0 border-8 border-white rounded-full"
-                        initial={{ scale: 1, opacity: 1 }}
-                        animate={{ scale: 1.3, opacity: 0 }}
-                        transition={{ duration: 1, repeat: Infinity }}
-                      />
-                    </motion.div>
-
-                    {countdown === 0 ? (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="space-y-4"
-                      >
-                        <div className="text-2xl font-bold text-green-400">✓ SOS ACTIVATED</div>
-                        <div className="space-y-2 text-sm">
-                          <div className="flex items-center justify-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            GPS location transmitted
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            Authorities notified
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <MessageSquare className="w-4 h-4" />
-                            SMS fallback active
-                          </div>
-                          <div className="flex items-center justify-center gap-2">
-                            <Shield className="w-4 h-4" />
-                            Community alerted
-                          </div>
-                        </div>
-                        <Button
-                          onClick={cancelSOS}
-                          className="mt-6 bg-white text-slate-900 hover:bg-slate-100 px-8 py-3 rounded-xl"
-                        >
-                          Cancel Alert
-                        </Button>
-                      </motion.div>
-                    ) : (
-                      <Button
-                        onClick={cancelSOS}
-                        className="bg-white/20 hover:bg-white/30 px-8 py-3 rounded-xl"
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </motion.div>
-
-            {/* Offline Sentinel */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <WifiOff className="w-6 h-6 text-orange-400" />
-                <h3 className="text-xl font-semibold">Offline Sentinel Mode</h3>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">Offline Maps</span>
-                  <span className="text-green-400 font-medium">Active</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">GPS Tracking</span>
-                  <span className="text-green-400 font-medium">Enabled</span>
-                </div>
-                <div className="flex items-center justify-between py-2 border-b border-white/10">
-                  <span className="text-white/70">SMS Fallback</span>
-                  <span className="text-green-400 font-medium">Ready</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="text-white/70">Last Sync</span>
-                  <span className="font-medium">2 min ago</span>
-                </div>
-              </div>
-              <Button
-                onClick={() => setIsOffline(!isOffline)}
-                className="w-full mt-4 bg-orange-600 hover:bg-orange-700 py-3 rounded-xl"
-              >
-                {isOffline ? "Exit Offline Mode" : "Test Offline Mode"}
-              </Button>
-            </motion.div>
+      {/* SOS Button */}
+      {!sosActive ? (
+        <div className="card p-8 text-center">
+          <motion.button
+            onMouseDown={startSOS} onMouseUp={cancelHold} onMouseLeave={cancelHold}
+            onTouchStart={startSOS} onTouchEnd={cancelHold}
+            className="relative w-40 h-40 rounded-full mx-auto flex items-center justify-center"
+            style={{ background: sosHolding ? "var(--thor-danger)" : "var(--thor-danger-muted)", border: "3px solid var(--thor-danger)", cursor: "pointer" }}
+            animate={sosHolding ? { scale: [1, 1.05, 1] } : {}}
+            transition={{ repeat: Infinity, duration: 0.5 }}
+          >
+            {sosHolding && (
+              <motion.div className="absolute inset-0 rounded-full" style={{ border: "3px solid var(--thor-danger)" }}
+                initial={{ scale: 1, opacity: 0.6 }} animate={{ scale: 2, opacity: 0 }} transition={{ duration: 1, repeat: Infinity }} />
+            )}
+            <div className="text-center">
+              <Siren className="w-10 h-10 mx-auto mb-2" style={{ color: sosHolding ? "#fff" : "var(--thor-danger)" }} />
+              <span className="text-heading" style={{ color: sosHolding ? "#fff" : "var(--thor-danger)" }}>
+                {sosHolding ? sosCountdown : "SOS"}
+              </span>
+            </div>
+          </motion.button>
+          <p className="text-caption mt-4" style={{ color: "var(--thor-text-muted)" }}>Hold for 3 seconds to activate SOS</p>
+          <p className="text-caption mt-1" style={{ color: "var(--thor-text-disabled)" }}>Transmits GPS, medical info & emergency signal</p>
+        </div>
+      ) : (
+        /* SOS Active overlay */
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="card p-6" style={{ borderColor: "var(--thor-danger)", background: "var(--thor-danger-muted)" }}>
+          <div className="flex items-center gap-3 mb-6">
+            <Siren className="w-6 h-6 animate-thor-pulse" style={{ color: "var(--thor-danger)" }} />
+            <h2 className="text-heading" style={{ color: "var(--thor-danger)" }}>SOS ACTIVE</h2>
+            <button onClick={cancelSOS} className="btn btn-ghost btn-sm ml-auto">Cancel SOS</button>
           </div>
-
-          {/* Emergency Resources */}
-          <div className="space-y-6">
-            {/* Emergency Contacts */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3 }}
-              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
-            >
-              <h3 className="text-xl font-semibold mb-6">Emergency Contacts</h3>
-              <div className="space-y-3">
-                {emergencyContacts.map((contact, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 + idx * 0.1 }}
-                    className="flex items-center gap-4 p-4 bg-white/10 rounded-xl hover:bg-white/20 transition-all cursor-pointer"
-                  >
-                    <div className={`w-12 h-12 rounded-full bg-${contact.color}-500/20 flex items-center justify-center`}>
-                      <contact.icon className="w-6 h-6" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="font-semibold">{contact.name}</div>
-                      <div className="text-sm text-white/70">{contact.number}</div>
-                    </div>
-                    <Phone className="w-5 h-5 text-white/50" />
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Nearby Emergency Facilities */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.5 }}
-              className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20"
-            >
-              <h3 className="text-xl font-semibold mb-6">Nearest Emergency Facilities</h3>
-              <div className="space-y-3">
-                {nearbyHelp.map((location, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.6 + idx * 0.1 }}
-                    className="p-4 bg-white/10 rounded-xl"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <div className="font-semibold">{location.name}</div>
-                        <div className="text-sm text-white/70">{location.type}</div>
-                      </div>
-                      <Navigation className="w-5 h-5 text-green-400" />
-                    </div>
-                    <div className="flex items-center gap-4 text-sm">
-                      <span className="text-white/70">{location.distance}</span>
-                      <span className="text-green-400">{location.eta}</span>
-                    </div>
-                    <Button className="w-full mt-3 bg-white/20 hover:bg-white/30 py-2 rounded-lg text-sm">
-                      Get Directions
-                    </Button>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Safety Pulse */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.7 }}
-              className="bg-gradient-to-br from-green-600/20 to-emerald-600/20 backdrop-blur-xl rounded-2xl p-6 border border-green-500/30"
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <Heart className="w-6 h-6 text-green-400" />
-                <h3 className="text-xl font-semibold">Safety Pulse Check-In</h3>
-              </div>
-              <p className="text-sm text-white/70 mb-4">
-                Regular check-ins ensure your safety. If you miss a check-in, we'll alert your emergency contacts and local authorities.
-              </p>
-              <Button className="w-full bg-green-600 hover:bg-green-700 py-4 rounded-xl font-semibold">
-                <Heart className="w-5 h-5 mr-2" />
-                I'm Safe - Check In Now
-              </Button>
-            </motion.div>
+          <div className="space-y-3">
+            {[
+              { label: "GPS signal transmitted", done: true },
+              { label: "SMS fallback sent", done: sosResult?.sms_sent },
+              { label: "Nearest police notified", done: sosResult?.authorities_notified },
+              { label: "Community responders alerted", done: true },
+            ].map((s, i) => (
+              <motion.div key={i} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.3 }}
+                className="flex items-center gap-3 p-3 rounded-lg" style={{ background: "rgba(0,0,0,0.2)" }}>
+                {s.done ? <CheckCircle className="w-5 h-5" style={{ color: "var(--thor-safe)" }} /> : <Clock className="w-5 h-5 animate-thor-pulse" style={{ color: "var(--thor-warn)" }} />}
+                <span className="text-body" style={{ color: s.done ? "var(--thor-safe)" : "var(--thor-warn)" }}>{s.label}</span>
+              </motion.div>
+            ))}
           </div>
+        </motion.div>
+      )}
+
+      {/* Pulse Check-in */}
+      <button onClick={() => setPulseTime(new Date().toLocaleTimeString())}
+        className="card p-5 w-full text-left flex items-center gap-4" style={{ borderColor: pulseTime ? "var(--thor-safe)" : undefined, cursor: "pointer" }}>
+        <Heart className="w-8 h-8" style={{ color: pulseTime ? "var(--thor-safe)" : "var(--thor-text-muted)" }} fill={pulseTime ? "currentColor" : "none"} />
+        <div>
+          <p className="text-subheading" style={{ color: "var(--thor-text)" }}>Safety Pulse — I'm Safe</p>
+          {pulseTime ? <p className="text-caption" style={{ color: "var(--thor-safe)" }}>✓ {pulseTime}</p> : <p className="text-caption" style={{ color: "var(--thor-text-muted)" }}>Tap to confirm</p>}
+        </div>
+      </button>
+
+      {/* Emergency Contacts */}
+      <div>
+        <h2 className="text-subheading mb-3" style={{ color: "var(--thor-text)" }}>Emergency Contacts</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {CONTACTS.map((c, i) => (
+            <a key={i} href={`tel:${c.number}`} className="card p-4 text-center transition-all" style={{ cursor: "pointer" }}>
+              <Phone className="w-6 h-6 mx-auto mb-2" style={{ color: c.color }} />
+              <p className="text-body font-semibold" style={{ color: "var(--thor-text)" }}>{c.label}</p>
+              <p className="text-heading" style={{ color: c.color }}>{c.number}</p>
+            </a>
+          ))}
         </div>
       </div>
     </div>

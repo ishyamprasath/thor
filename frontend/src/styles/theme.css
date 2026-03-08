@@ -1,181 +1,408 @@
-@custom-variant dark (&:is(.dark *));
-
+/* ─── THOR Solid Premium Design System ─── */
 :root {
-  --font-size: 16px;
-  --background: #ffffff;
-  --foreground: oklch(0.145 0 0);
-  --card: #ffffff;
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: #030213;
-  --primary-foreground: oklch(1 0 0);
-  --secondary: oklch(0.95 0.0058 264.53);
-  --secondary-foreground: #030213;
-  --muted: #ececf0;
-  --muted-foreground: #717182;
-  --accent: #e9ebef;
-  --accent-foreground: #030213;
-  --destructive: #d4183d;
-  --destructive-foreground: #ffffff;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: transparent;
-  --input-background: #f3f3f5;
-  --switch-background: #cbced4;
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: #030213;
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Core Brand (Solid) */
+  --thor-brand: #EAB308;
+  --thor-brand-light: #FDE047;
+  --thor-brand-glow: #FBBF24;
+
+  /* Deep Solid Backgrounds */
+  --thor-bg: #000000;
+  /* Pure Black Background */
+  --thor-surface: #0A0A0A;
+  /* Slightly elevated surface */
+  --thor-surface-2: #121212;
+  /* Elevated cards */
+  --thor-surface-3: #1A1A1A;
+  /* Highest elevation / hover states */
+
+  /* Solid Borders */
+  --thor-border: #27272A;
+  --thor-border-hover: #3F3F46;
+  --thor-border-glow: #EAB308;
+
+  /* Solid Text Colors */
+  --thor-text: #FFFFFF;
+  --thor-text-secondary: #A1A1AA;
+  --thor-text-muted: #71717A;
+
+  /* Solid Semantic Colors */
+  --thor-safe: #10B981;
+  --thor-safe-muted: #064E3B;
+  --thor-warn: #F59E0B;
+  --thor-warn-muted: #78350F;
+  --thor-danger: #EF4444;
+  --thor-danger-muted: #7F1D1D;
+  --thor-info: #3B82F6;
+  --thor-info-muted: #1E3A8A;
+
+  /* Shadows */
+  --thor-shadow-solid: 0 10px 30px -10px rgba(0, 0, 0, 1);
+  --thor-shadow-glow: 0 0 15px rgba(234, 179, 8, 0.5);
+  --thor-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.145 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.145 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.396 0.141 25.723);
-  --destructive-foreground: oklch(0.637 0.237 25.331);
-  --border: oklch(0.269 0 0);
-  --input: oklch(0.269 0 0);
-  --ring: oklch(0.439 0 0);
-  --font-weight-medium: 500;
-  --font-weight-normal: 400;
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(0.269 0 0);
-  --sidebar-ring: oklch(0.439 0 0);
+* {
+  box-sizing: border-box;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-input-background: var(--input-background);
-  --color-switch-background: var(--switch-background);
-  --color-ring: var(--ring);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, sans-serif;
+  background-color: var(--thor-bg);
+  color: var(--thor-text);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
-@layer base {
-  * {
-    @apply border-border outline-ring/50;
+/* Base resets & Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--thor-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--thor-border);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--thor-border-hover);
+}
+
+/* Remove mesh background and keep it solid pure black - we keep empty classes so React doesn't break */
+.ambient-bg {
+  display: none;
+}
+
+.ambient-orb {
+  display: none;
+}
+
+/* Keep class name but make it 100% Solid Premium */
+.glass-panel {
+  background-color: var(--thor-surface);
+  border: 1px solid var(--thor-border);
+  box-shadow: var(--thor-shadow-solid);
+}
+
+.glass-card {
+  background-color: var(--thor-surface-2);
+  border: 1px solid var(--thor-border);
+  box-shadow: var(--thor-shadow-solid), var(--thor-shadow-inset);
+  border-radius: 20px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  transform: skewX(-20deg);
+  transition: 0.5s;
+}
+
+.glass-card:hover {
+  transform: translateY(-4px);
+  background-color: var(--thor-surface-3);
+  border-color: var(--thor-border-hover);
+  box-shadow: 0 12px 40px -8px rgba(0, 0, 0, 1), var(--thor-shadow-inset);
+}
+
+.glass-card:hover::before {
+  left: 150%;
+}
+
+/* Typography Enhancements */
+.text-display {
+  font-size: 3.5rem;
+  line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+}
+
+.text-heading {
+  font-size: 2rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.text-subheading {
+  font-size: 1.25rem;
+  line-height: 1.4;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.text-body {
+  font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 400;
+}
+
+.text-caption {
+  font-size: 0.875rem;
+  line-height: 1.5;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+}
+
+.text-micro {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.gradient-text {
+  /* Solid gradient without translucency */
+  background: linear-gradient(135deg, #FFFFFF 0%, #A1A1AA 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-brand {
+  background: linear-gradient(135deg, var(--thor-brand-light) 0%, var(--thor-brand) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Premium Buttons - Solid Colors */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+  border: none;
+  outline: none;
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-brand {
+  background-color: var(--thor-brand);
+  color: #000000;
+  box-shadow: var(--thor-shadow-glow);
+}
+
+.btn-brand:hover {
+  background-color: var(--thor-brand-light);
+  transform: scale(1.02) translateY(-2px);
+  box-shadow: 0 0 25px rgba(234, 179, 8, 0.8);
+}
+
+.btn-ghost {
+  background-color: transparent;
+  color: var(--thor-text);
+  border: 1px solid var(--thor-border);
+}
+
+.btn-ghost:hover {
+  background-color: var(--thor-surface-3);
+  border-color: var(--thor-text-secondary);
+}
+
+/* Solid Inputs */
+.input {
+  width: 100%;
+  background-color: var(--thor-surface);
+  border: 1px solid var(--thor-border);
+  color: var(--thor-text);
+  padding: 0.875rem 1.25rem;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  transition: all 0.2s ease;
+  box-shadow: var(--thor-shadow-inset);
+}
+
+.input:focus {
+  outline: none;
+  background-color: var(--thor-surface-2);
+  border-color: var(--thor-brand);
+  box-shadow: 0 0 0 2px var(--thor-brand), var(--thor-shadow-inset);
+}
+
+.input::placeholder {
+  color: var(--thor-text-muted);
+}
+
+/* Solid Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border: 1px solid transparent;
+}
+
+.badge-safe {
+  background-color: var(--thor-safe-muted);
+  color: #34D399;
+  border-color: var(--thor-safe);
+}
+
+.badge-warn {
+  background-color: var(--thor-warn-muted);
+  color: #FBBF24;
+  border-color: var(--thor-warn);
+}
+
+.badge-danger {
+  background-color: var(--thor-danger-muted);
+  color: #F87171;
+  border-color: var(--thor-danger);
+}
+
+.badge-brand {
+  background-color: #78350F;
+  color: var(--thor-brand-light);
+  border-color: var(--thor-brand);
+}
+
+/* Animations - Keeping them for motion graphics but 100% solid feeling */
+@keyframes thor-pulse {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.8);
   }
 
-  body {
-    @apply bg-background text-foreground;
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(234, 179, 8, 0);
   }
 
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
-
-  html {
-    font-size: var(--font-size);
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(234, 179, 8, 0);
   }
+}
 
-  h1 {
-    font-size: var(--text-2xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+.animate-thor-pulse {
+  animation: thor-pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+}
 
-  h2 {
-    font-size: var(--text-xl);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* ─── GLOBAL 100% SOLID OVERRIDES ─── */
+/* The user requested ZERO glass and 100% solid opacity */
 
-  h3 {
-    font-size: var(--text-lg);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* 1. Neutralize all Tailwind backdrop blur */
+.backdrop-blur-sm,
+.backdrop-blur-md,
+.backdrop-blur-lg,
+.backdrop-blur-xl,
+.backdrop-blur-2xl,
+.backdrop-blur-3xl,
+.backdrop-blur {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
 
-  h4 {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* 2. Force translucent Tailwind backgrounds to solid tokens */
+.bg-white\/5,
+.bg-white\/8,
+.bg-white\/10,
+.bg-white\/20,
+.bg-white\/80,
+.bg-white\/90,
+.bg-slate-900\/80,
+.bg-slate-900\/90,
+.bg-slate-900\/95,
+.bg-indigo-50\/50,
+.bg-indigo-400\/20,
+.bg-\[rgba\(255\,255\,255\,0\.05\)\] {
+  background-color: var(--thor-surface-2) !important;
+}
 
-  label {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* Base surface mapping for nested cards */
+.glass-card .bg-white\/5,
+.glass-panel .bg-white\/5 {
+  background-color: var(--thor-surface-3) !important;
+}
 
-  button {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    line-height: 1.5;
-  }
+/* 3. Force translucent Tailwind borders to solid borders */
+.border-white\/5,
+.border-white\/10,
+.border-white\/20 {
+  border-color: var(--thor-border) !important;
+}
 
-  input {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-normal);
-    line-height: 1.5;
-  }
+.hover\:bg-white\/10:hover,
+.hover\:bg-white\/8:hover,
+.hover\:bg-white\/5:hover {
+  background-color: var(--thor-surface-3) !important;
+}
+
+/* 4. Completely hide gradient ambient orbs from old pages */
+.bg-blue-500\/10,
+.bg-yellow-500\/5,
+.bg-yellow-500\/10,
+.bg-indigo-400\/10,
+.bg-violet-400\/20,
+.bg-blue-400\/10,
+.bg-red-500\/5,
+.bg-green-500\/5,
+.bg-gradient-to-br.from-blue-500.opacity-20,
+.bg-gradient-to-br.from-violet-500.opacity-20,
+.opacity-20,
+.opacity-15 {
+  display: none !important;
+  opacity: 0 !important;
+}
+
+/* ─── LIGHT THEME OVERRIDES ─── */
+:root.light {
+  /* Warm greenish-yellowish-white palette */
+  --thor-bg: #FCFDF7;
+  --thor-surface: #F4F9ED;
+  --thor-surface-2: #EBF4DF;
+  --thor-surface-3: #D9F99D;
+
+  /* Subtle green tinted borders */
+  --thor-border: #D4E0C5;
+  --thor-border-hover: #A3E635;
+  --thor-border-glow: #FBBF24;
+
+  /* Dark text for legibility */
+  --thor-text: #09090B;
+  --thor-text-secondary: #52525B;
+  --thor-text-muted: #71717A;
+
+  /* Invert shadows to be subtle dark dropshadows rather than glowing */
+  --thor-shadow-solid: 0 10px 30px -10px rgba(0, 0, 0, 0.1);
+  --thor-shadow-inset: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+:root.light .glass-card::before {
+  background: linear-gradient(90deg, transparent, rgba(0, 0, 0, 0.03), transparent);
+}
+
+:root.light .gradient-text {
+  background: linear-gradient(135deg, #09090B 0%, #71717A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }

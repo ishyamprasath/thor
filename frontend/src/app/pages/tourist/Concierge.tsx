@@ -1,212 +1,166 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "motion/react";
-import { MessageSquare, Send, Bot, User, Sparkles, ArrowLeft } from "lucide-react";
-import { useNavigate } from "react-router";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { Send, Zap, User, Sparkles, MapPin } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "../../context/TranslationContext";
+
+import { API_URL } from "../../config/api";
 
 interface Message {
-  id: number;
-  sender: "user" | "ai";
-  text: string;
-  time: string;
+  role: "user" | "ai";
+  content: string;
+  timestamp: Date;
 }
 
-export default function TouristConcierge() {
-  const navigate = useNavigate();
-  const [inputMessage, setInputMessage] = useState("");
+const SUGGESTIONS = [
+  "What's the safest area to stay around here?",
+  "Emergency phrases in the local language",
+  "Common tourist scams to watch out for",
+  "Safe food and water recommendations",
+  "Local customs I should know about",
+];
+
+export default function Concierge() {
+  const { token } = useAuth();
+  const { language, translate } = useTranslation();
+
   const [messages, setMessages] = useState<Message[]>([
-    {
-      id: 1,
-      sender: "ai",
-      text: "Hello! I'm your GuardianAI assistant. I can help you with local recommendations, safety tips, translations, and emergency guidance. How can I assist you today?",
-      time: "Just now",
-    },
+    { role: "ai", content: "Hello! I'm your THOR AI Concierge. I can help with safety tips, cultural guidance, emergency translations, and local recommendations. How can I assist you?", timestamp: new Date() },
   ]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  const quickSuggestions = [
-    "Where are the safest restaurants nearby?",
-    "Translate 'Where is the hospital?' to French",
-    "What are local safety customs?",
-    "Show me emergency contacts",
-  ];
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
+  const sendMessage = async (text?: string) => {
+    const msg = text || input.trim();
+    if (!msg) return;
+    setInput("");
 
-    const userMessage: Message = {
-      id: messages.length + 1,
-      sender: "user",
-      text: inputMessage,
-      time: "Now",
-    };
+    const newHistory = [...messages, { role: "user" as const, content: msg, timestamp: new Date() }];
+    setMessages(newHistory);
+    setLoading(true);
 
-    setMessages([...messages, userMessage]);
-    setInputMessage("");
+    try {
+      const activePlan = JSON.parse(localStorage.getItem("thor_active_plan") || "null");
 
-    // Simulate AI response
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: messages.length + 2,
-        sender: "ai",
-        text: getAIResponse(inputMessage),
-        time: "Now",
-      };
-      setMessages((prev) => [...prev, aiResponse]);
-    }, 1000);
-  };
+      const flatHistory = newHistory.map(m => ({ role: m.role, content: m.content }));
 
-  const getAIResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-    
-    if (lowerQuery.includes("restaurant") || lowerQuery.includes("food")) {
-      return "I recommend 'Le Bistrot Parisien' (0.5km away) - Safety Score: 96%. They serve authentic French cuisine in a well-monitored tourist area. Open until 11 PM. Would you like directions?";
-    } else if (lowerQuery.includes("translate")) {
-      return "In French: 'Où est l'hôpital?' (pronounced: oo eh loh-pee-tal). I can also provide voice pronunciation if needed. Stay safe!";
-    } else if (lowerQuery.includes("safety") || lowerQuery.includes("custom")) {
-      return "Key safety customs in Paris: 1) Keep bags in front in crowded areas 2) Avoid dark alleys at night 3) Tourist areas are well-policed 4) Emergency number is 112. Your current area has a 94% safety score.";
-    } else if (lowerQuery.includes("emergency")) {
-      return "Emergency Contacts:\n🚨 Police: 17 or 112\n🏥 Ambulance: 15\n🔥 Fire: 18\n📞 Your Embassy: +33-1-43-12-22-22\n\nNearest hospital: City General (0.8km). Would you like me to activate emergency navigation?";
+      const res = await fetch(`${API_URL}/trip/chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          message: msg,
+          history: flatHistory.slice(0, -1), // Don't include the current message in history array
+          language,
+          context: "concierge",
+          active_plan: activePlan
+        }),
+      });
+      const data = await res.json();
+
+      let reply = "I am experiencing network interference. Please try again.";
+      if (res.ok && data.reply) reply = data.reply;
+
+      setMessages((prev) => [...prev, { role: "ai", content: reply, timestamp: new Date() }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "ai", content: "I'm having trouble connecting to the THOR network. Please check your connection and try again.", timestamp: new Date() }]);
     }
-    
-    return "I understand you're asking about travel guidance. I can help with safety tips, local recommendations, translations, and emergency assistance. What specific information would you like?";
+    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-teal-50 to-cyan-50 flex flex-col">
+    <div className="h-full flex flex-col pb-20 bg-black">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl border-b border-white/20"
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-lg">
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-600 rounded-full flex items-center justify-center">
-                <Bot className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-slate-800">AI Concierge</h1>
-                <div className="flex items-center gap-1 text-xs text-green-600">
-                  <div className="w-2 h-2 bg-green-600 rounded-full animate-pulse" />
-                  Online & Ready
-                </div>
-              </div>
-            </div>
-            <Sparkles className="w-6 h-6 text-teal-600" />
-          </div>
+      <div className="flex items-center gap-3 px-6 py-4 border-b border-zinc-800 bg-zinc-950 shrink-0">
+        <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-yellow-500/10 border border-yellow-500/20">
+          <Sparkles className="w-5 h-5 text-yellow-500" />
         </div>
-      </motion.div>
-
-      {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="space-y-6">
-            {messages.map((message, idx) => (
-              <motion.div
-                key={message.id}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.1 }}
-                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
-              >
-                <div className={`flex gap-3 max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : ""}`}>
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                      message.sender === "ai"
-                        ? "bg-gradient-to-br from-teal-500 to-cyan-600"
-                        : "bg-gradient-to-br from-blue-500 to-indigo-600"
-                    }`}
-                  >
-                    {message.sender === "ai" ? (
-                      <Bot className="w-6 h-6 text-white" />
-                    ) : (
-                      <User className="w-6 h-6 text-white" />
-                    )}
-                  </div>
-                  <div
-                    className={`rounded-2xl p-4 ${
-                      message.sender === "ai"
-                        ? "bg-white/80 backdrop-blur-xl border border-white/20 shadow-lg"
-                        : "bg-gradient-to-br from-blue-600 to-indigo-600 text-white shadow-lg"
-                    }`}
-                  >
-                    <p className={`${message.sender === "ai" ? "text-slate-800" : "text-white"} whitespace-pre-line`}>
-                      {message.text}
-                    </p>
-                    <div className={`text-xs mt-2 ${message.sender === "ai" ? "text-slate-400" : "text-blue-100"}`}>
-                      {message.time}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-
-          {/* Quick Suggestions */}
-          {messages.length === 1 && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5 }}
-              className="mt-8"
-            >
-              <h3 className="text-sm font-medium text-slate-600 mb-4 text-center">
-                Quick suggestions:
-              </h3>
-              <div className="grid md:grid-cols-2 gap-3">
-                {quickSuggestions.map((suggestion, idx) => (
-                  <motion.button
-                    key={idx}
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ delay: 0.6 + idx * 0.1 }}
-                    whileHover={{ scale: 1.02 }}
-                    onClick={() => {
-                      setInputMessage(suggestion);
-                      setTimeout(() => handleSendMessage(), 100);
-                    }}
-                    className="bg-white/80 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg hover:shadow-xl transition-all text-left text-sm text-slate-700"
-                  >
-                    {suggestion}
-                  </motion.button>
-                ))}
-              </div>
-            </motion.div>
-          )}
+        <div>
+          <h1 className="text-xl font-bold text-white tracking-tight">{translate("Cultural Concierge")}</h1>
+          <p className="text-xs text-zinc-500 flex items-center gap-1">
+            <MapPin className="w-3 h-3" /> {translate("Context-Aware Local AI")}
+          </p>
+        </div>
+        <div className="ml-auto flex items-center gap-1.5 bg-green-500/10 text-green-500 px-2.5 py-1 rounded-full text-xs font-bold border border-green-500/20 uppercase tracking-widest">
+          <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+          {translate("Online")}
         </div>
       </div>
 
-      {/* Input Area */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl border-t border-white/20 sticky bottom-0"
-      >
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" ref={scrollRef}>
+        {messages.map((msg, i) => (
+          <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+            className={`flex gap-3 ${msg.role === "user" ? "flex-row-reverse" : ""}`}>
+
+            <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${msg.role === "ai" ? "bg-yellow-500/10 border border-yellow-500/20 text-yellow-500" : "bg-blue-500/10 border border-blue-500/20 text-blue-500"}`}>
+              {msg.role === "ai" ? <Zap className="w-4 h-4" fill="currentColor" /> : <User className="w-4 h-4" />}
+            </div>
+
+            <div className={`max-w-[75%] rounded-2xl px-5 py-3 shadow-lg ${msg.role === "user" ? "bg-blue-600 text-white rounded-br-sm" : "bg-zinc-900 border border-zinc-800 text-gray-200 rounded-bl-sm"}`}>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
+              <p className={`text-[10px] mt-2 font-medium ${msg.role === "user" ? "text-blue-200" : "text-zinc-600"}`}>
+                {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+
+        {loading && (
           <div className="flex gap-3">
-            <Input
-              type="text"
-              placeholder="Ask me anything about safety, places, translations..."
-              value={inputMessage}
-              onChange={(e) => setInputMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
-              className="flex-1 px-6 py-6 rounded-2xl border-2 border-slate-200 focus:border-teal-500 text-base"
-            />
-            <Button
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim()}
-              className="bg-gradient-to-r from-teal-600 to-cyan-600 hover:from-teal-700 hover:to-cyan-700 text-white px-8 py-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-yellow-500/10 border border-yellow-500/20 text-yellow-500">
+              <Zap className="w-4 h-4 animate-pulse" fill="currentColor" />
+            </div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-bl-sm px-5 py-4">
+              <div className="flex gap-1.5">
+                {[0, 1, 2].map(i => (
+                  <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-600 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Suggestions */}
+      {messages.length <= 1 && (
+        <div className="px-6 pb-4 shrink-0">
+          <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-3">{translate("Try asking:")}</p>
+          <div className="flex flex-wrap gap-2">
+            {SUGGESTIONS.map((s, i) => (
+              <button key={i} onClick={() => sendMessage(s)}
+                className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-3 py-1.5 rounded-lg text-xs transition-colors">
+                {s}
+              </button>
+            ))}
           </div>
         </div>
-      </motion.div>
+      )}
+
+      {/* Input */}
+      <div className="p-4 bg-zinc-950 border-t border-zinc-800 shrink-0">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+            placeholder={translate("Ask about safety, culture, emergency phrases...")}
+            className="flex-1 bg-black border border-zinc-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-yellow-500 transition-colors"
+          />
+          <button
+            onClick={() => sendMessage()}
+            disabled={!input.trim() || loading}
+            className="bg-yellow-500 hover:bg-yellow-400 text-black p-3 rounded-xl disabled:opacity-50 transition-colors flex items-center justify-center"
+          >
+            <Send className="w-5 h-5" />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

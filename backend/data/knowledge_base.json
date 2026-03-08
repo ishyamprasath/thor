@@ -1,0 +1,127 @@
+[
+    {
+        "region": "Coimbatore",
+        "topic": "emergency_phrases",
+        "content": "If you need immediate help from locals, say 'Enakku udhavi thevai' (I need help). For police, say 'Police-a koopunga' (Call the police). The local emergency number for police is 100, ambulance is 108, and fire is 101."
+    },
+    {
+        "region": "Coimbatore",
+        "topic": "cultural_etiquette",
+        "content": "Remove shoes before entering temples and homes. Use your right hand for exchanges. Head nodding sideways means 'yes' in Tamil culture. Dress modestly at religious sites — cover shoulders and knees."
+    },
+    {
+        "region": "Coimbatore",
+        "topic": "local_scams",
+        "content": "Be cautious of auto-rickshaw drivers quoting inflated prices. Always negotiate fares before boarding or insist on using the meter. Tour guides at temples may demand excessive fees — agree on a price beforehand."
+    },
+    {
+        "region": "Coimbatore",
+        "topic": "transport_safety",
+        "content": "Use Ola or Uber for safe, metered rides. Avoid unmarked taxis. When using public buses, keep valuables close. The Coimbatore Metro is safe but crowded during peak hours (8-10 AM, 5-7 PM)."
+    },
+    {
+        "region": "Coimbatore",
+        "topic": "food_safety",
+        "content": "Stick to bottled water (check the seal). Street food is generally safe at busy stalls. Avoid raw salads at unknown restaurants. Popular safe eateries include Annapoorna, Sree Annapoorna, and Hotel Sri Krishna."
+    },
+    {
+        "region": "Tamil Nadu",
+        "topic": "dress_code",
+        "content": "Tamil Nadu is generally conservative. Women should avoid revealing clothing in rural areas and temples. Swimwear is only appropriate at resort pools and private beaches. Lightweight cotton clothing is recommended due to the tropical climate."
+    },
+    {
+        "region": "Tamil Nadu",
+        "topic": "weather_safety",
+        "content": "Monsoon season (Oct-Dec) brings heavy rains and flooding. Avoid low-lying areas during heavy rainfall. Summers (Apr-Jun) can exceed 40°C — carry water, wear sunscreen. The best season to visit is winter (Nov-Feb)."
+    },
+    {
+        "region": "Paris",
+        "topic": "emergency_phrases",
+        "content": "For help, say 'Au secours!' (Help!) or 'Appelez la police' (Call the police). Emergency numbers: Police 17, Ambulance 15, Fire 18. The universal EU emergency number is 112."
+    },
+    {
+        "region": "Paris",
+        "topic": "local_scams",
+        "content": "Beware of the Ring Scam (someone 'finds' a gold ring and tries to sell it), Petition Scam (distraction for pickpocketing), and fake charity collectors. Keep bags zipped and in front of you on the Metro."
+    },
+    {
+        "region": "Paris",
+        "topic": "cultural_etiquette",
+        "content": "Always greet shop owners with 'Bonjour' when entering. Tipping is not mandatory (service included) but rounding up is appreciated. Queue etiquette is important. Avoid loud talking in restaurants and public transport."
+    },
+    {
+        "region": "Paris",
+        "topic": "transport_safety",
+        "content": "The Metro is safe but watch for pickpockets on lines 1, 4, and RER B. Avoid empty carriages late at night. Validated tickets are required — inspectors issue €50 fines. Use Citymapper app for navigation."
+    },
+    {
+        "region": "Dubai",
+        "topic": "cultural_etiquette",
+        "content": "Dress modestly in public (shoulders and knees covered). Public displays of affection are discouraged. During Ramadan, avoid eating/drinking in public during daylight. Photography of government buildings and military is prohibited."
+    },
+    {
+        "region": "Dubai",
+        "topic": "emergency_phrases",
+        "content": "Most people speak English. For Arabic help: 'Musaada!' (Help!), 'Ittisal bish-shurta' (Call the police). Emergency: Police 999, Ambulance 998, Fire 997."
+    },
+    {
+        "region": "Dubai",
+        "topic": "local_scams",
+        "content": "Be wary of fake tour operators, inflated taxi meters (insist on metered rides), and gold souk vendors pressuring you into purchases. Always verify licenses for desert safari operators."
+    },
+    {
+        "region": "Tokyo",
+        "topic": "emergency_phrases",
+        "content": "For help: 'Tasukete!' (Help!). Emergency numbers: Police 110, Fire/Ambulance 119. Most operators don't speak English — say 'Eigo onegaishimasu' (English please). The #7119 number is for non-emergency medical consultations."
+    },
+    {
+        "region": "Tokyo",
+        "topic": "cultural_etiquette",
+        "content": "Bow when greeting. Remove shoes indoors. Don't tip (it can be considered rude). Eat noodles loudly (it's polite). Don't talk on phones on trains. Queue in orderly lines. Carry cash — many places don't accept cards."
+    },
+    {
+        "region": "Tokyo",
+        "topic": "safety_tips",
+        "content": "Japan is extremely safe but earthquakes are common. Familiarize yourself with earthquake drills. Download the Safety Tips app by JNTO. Trains stop running around midnight — plan accordingly or budget for taxis."
+    },
+    {
+        "region": "Singapore",
+        "topic": "cultural_etiquette",
+        "content": "Singapore has strict laws: no chewing gum, no littering (S$300 fine), no jaywalking. Smoking only in designated areas. The country is multicultural — respect all religious practices. Tipping is not customary."
+    },
+    {
+        "region": "Singapore",
+        "topic": "emergency_phrases",
+        "content": "English is widely spoken. Emergency: Police 999, Ambulance 995, Fire 995. The non-emergency police line is 1800-255-0000. For tourist assistance, call the STB helpline at 1800-736-2000."
+    },
+    {
+        "region": "New York",
+        "topic": "safety_tips",
+        "content": "Avoid walking alone in Central Park after dark. Be aware of subway safety — stand back from the edge. Times Square pickpockets are common. Keep your phone secure on the subway. Avoid unmarked taxis — use yellow cabs or rideshare apps."
+    },
+    {
+        "region": "New York",
+        "topic": "emergency_phrases",
+        "content": "Call 911 for all emergencies. For non-emergency police, call 311. Tourist assistance is available at Times Square Alliance visitor center. Most hospitals accept walk-ins for urgent care."
+    },
+    {
+        "region": "Bali",
+        "topic": "cultural_etiquette",
+        "content": "Always dress modestly in temples (sarong required — usually available for rent). Don't point with your index finger. Don't touch anyone's head. Offerings (canang sari) on the ground should never be stepped on."
+    },
+    {
+        "region": "Bali",
+        "topic": "safety_tips",
+        "content": "Watch for rip currents at beaches (especially Kuta). Don't drink tap water. Be cautious with rented scooters — international driving permit required. Avoid monkeys at Ubud Monkey Forest — they grab phones and glasses."
+    },
+    {
+        "region": "Bali",
+        "topic": "local_scams",
+        "content": "Common scams include money changers shortchanging tourists, inflated taxi meters, fake tour guides at temples, and vendors adding unexpected charges. Always agree on prices before any service."
+    },
+    {
+        "region": "General",
+        "topic": "universal_safety",
+        "content": "Always keep digital copies of your passport and important documents in cloud storage. Share your itinerary with someone you trust. Register with your country's embassy. Keep emergency cash in a separate location from your wallet."
+    }
+]

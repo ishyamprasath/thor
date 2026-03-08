@@ -1,190 +1,182 @@
-import { useState } from "react";
-import { motion } from "motion/react";
-import { MapPin, Search, Sparkles, ArrowRight, Shield } from "lucide-react";
+import { useState, useRef } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Zap, MapPin, Calendar, ArrowRight, Sparkles, Search } from "lucide-react";
 import { useNavigate } from "react-router";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
+import { useAuth } from "../../context/AuthContext";
+import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
+
+const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
+const LIBS: ("places")[] = ["places"];
+
+const popularDestinations = [
+  { name: "Paris, France", emoji: "🗼" },
+  { name: "Tokyo, Japan", emoji: "⛩️" },
+  { name: "Dubai, UAE", emoji: "🏙️" },
+  { name: "New York, USA", emoji: "🗽" },
+  { name: "Singapore", emoji: "🦁" },
+  { name: "Bali, Indonesia", emoji: "🌴" },
+];
 
 export default function TouristDestination() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [destination, setDestination] = useState("");
-  const [isSearching, setIsSearching] = useState(false);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(false);
+  const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
 
-  const handleSearch = () => {
-    if (destination.trim()) {
-      setIsSearching(true);
-      setTimeout(() => {
-        navigate("/tourist/route-planner", { state: { destination } });
-      }, 1500);
+  const { isLoaded } = useJsApiLoader({
+    googleMapsApiKey: MAPS_KEY,
+    libraries: LIBS,
+  });
+
+  const onPlaceChanged = () => {
+    if (autocompleteRef.current) {
+      const place = autocompleteRef.current.getPlace();
+      if (place.formatted_address) {
+        setDestination(place.formatted_address);
+      } else if (place.name) {
+        setDestination(place.name);
+      }
     }
   };
 
-  const popularDestinations = [
-    { name: "Paris, France", safety: 92 },
-    { name: "Tokyo, Japan", safety: 98 },
-    { name: "Dubai, UAE", safety: 95 },
-    { name: "New York, USA", safety: 88 },
-    { name: "Singapore", safety: 99 },
-    { name: "Barcelona, Spain", safety: 90 },
-  ];
+  const handlePlan = () => {
+    if (!destination.trim()) return;
+    setLoading(true);
+    setTimeout(() => {
+      navigate("/tourist/trip-planner", { state: { destination, startDate, endDate } });
+    }, 900);
+  };
+
+  const inputClass =
+    "w-full bg-white/5 border border-white/10 rounded-2xl py-4 px-5 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/60 focus:bg-white/10 transition-all text-sm";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 relative overflow-hidden">
-      {/* Animated Background */}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-950 to-indigo-950 relative overflow-hidden">
+      {/* BG */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-400/20 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 8, repeat: Infinity }}
-        />
-        <motion.div
-          className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-cyan-400/20 rounded-full blur-3xl"
-          animate={{ scale: [1.3, 1, 1.3], opacity: [0.5, 0.3, 0.5] }}
-          transition={{ duration: 10, repeat: Infinity }}
-        />
+        <motion.div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.3, 1] }} transition={{ duration: 8, repeat: Infinity }} />
+        <motion.div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-yellow-500/5 rounded-full blur-3xl"
+          animate={{ scale: [1.3, 1, 1.3] }} transition={{ duration: 6, repeat: Infinity }} />
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 py-12">
         {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
-        >
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <Shield className="w-10 h-10 text-blue-600" />
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
-              GuardianAI
-            </h1>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-10">
+          <div className="flex items-center gap-3 mb-6">
+            <Zap className="w-8 h-8 text-yellow-400" fill="currentColor" />
+            <span className="text-2xl font-black tracking-widest bg-gradient-to-r from-yellow-400 to-red-400 bg-clip-text text-transparent">THOR</span>
           </div>
-          <h2 className="text-2xl font-semibold text-slate-800 mb-2">
-            Where are you traveling?
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-3">
+            Where are you{" "}
+            <span className="bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">heading?</span>
           </h2>
-          <p className="text-slate-600">
-            Enter your destination and we'll create a safe journey for you
+          <p className="text-slate-400">
+            {user ? `Welcome, ${user.name}! ` : ""}Let THOR plan your perfect journey ⚡
           </p>
         </motion.div>
 
         {/* Search Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-3xl mx-auto mb-12"
-        >
-          <div className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl">
-            <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="w-6 h-6 text-cyan-600" />
-              <h3 className="text-xl font-semibold text-slate-800">AI-Powered Safe Travel</h3>
-            </div>
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+          className="bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 shadow-2xl p-8 mb-8">
 
+          <div className="flex items-center gap-2 mb-6">
+            <Sparkles className="w-5 h-5 text-yellow-400" />
+            <span className="text-yellow-400 font-semibold text-sm">AI-Powered Trip Planner</span>
+          </div>
+
+          <div className="space-y-4">
+            {/* Destination with Google Autocomplete */}
             <div className="relative">
-              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <Input
-                type="text"
-                placeholder="Enter destination (e.g., Paris, France)"
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="pl-12 pr-4 py-7 text-lg rounded-2xl border-2 border-slate-200 focus:border-blue-500 transition-all"
-              />
+              <MapPin className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400 z-10 pointer-events-none" />
+              {isLoaded ? (
+                <Autocomplete
+                  onLoad={(ac) => (autocompleteRef.current = ac)}
+                  onPlaceChanged={onPlaceChanged}
+                  options={{ types: ["(cities)"] }}
+                >
+                  <input
+                    type="text"
+                    value={destination}
+                    onChange={(e) => setDestination(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handlePlan()}
+                    placeholder="Search destination (e.g. Paris, France)"
+                    className={`${inputClass} pl-14 text-base`}
+                  />
+                </Autocomplete>
+              ) : (
+                <input
+                  type="text"
+                  value={destination}
+                  onChange={(e) => setDestination(e.target.value)}
+                  placeholder="Search destination..."
+                  className={`${inputClass} pl-14 text-base`}
+                />
+              )}
             </div>
 
-            <Button
-              onClick={handleSearch}
-              disabled={!destination.trim() || isSearching}
-              className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white py-7 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+            {/* Dates */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
+                <input type="date" value={startDate} min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className={`${inputClass} pl-11 [color-scheme:dark]`} />
+              </div>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none z-10" />
+                <input type="date" value={endDate} min={startDate || new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className={`${inputClass} pl-11 [color-scheme:dark]`} />
+              </div>
+            </div>
+
+            {/* CTA */}
+            <motion.button
+              onClick={handlePlan}
+              disabled={!destination.trim() || loading}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 hover:from-yellow-400 hover:to-red-400 text-white font-bold py-5 rounded-2xl shadow-2xl transition-all disabled:opacity-40 flex items-center justify-center gap-3 text-lg"
             >
-              {isSearching ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                >
-                  <Search className="w-5 h-5" />
-                </motion.div>
+              {loading ? (
+                <>
+                  <motion.div animate={{ rotate: 360 }} transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}>
+                    <Sparkles className="w-6 h-6" />
+                  </motion.div>
+                  Generating your AI plan...
+                </>
               ) : (
                 <>
-                  Find Safe Routes
-                  <ArrowRight className="w-5 h-5 ml-2" />
+                  <Sparkles className="w-6 h-6" />
+                  Plan My Trip with AI
+                  <ArrowRight className="w-6 h-6" />
                 </>
               )}
-            </Button>
-
-            {isSearching && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 text-center"
-              >
-                <div className="flex items-center justify-center gap-2 text-blue-600">
-                  <Sparkles className="w-4 h-4 animate-pulse" />
-                  <span>AI analyzing safety data...</span>
-                </div>
-              </motion.div>
-            )}
+            </motion.button>
           </div>
         </motion.div>
 
         {/* Popular Destinations */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
-          className="max-w-5xl mx-auto"
-        >
-          <h3 className="text-xl font-semibold text-slate-800 mb-6 text-center">
-            Popular Safe Destinations
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+          <h3 className="text-white font-semibold mb-4 text-sm uppercase tracking-widest flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-400" /> Popular Destinations
           </h3>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            {popularDestinations.map((dest, idx) => (
-              <motion.button
-                key={idx}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 + idx * 0.1 }}
-                whileHover={{ scale: 1.03, y: -2 }}
-                onClick={() => {
-                  setDestination(dest.name);
-                  setTimeout(() => handleSearch(), 300);
-                }}
-                className="bg-white/70 backdrop-blur-xl rounded-xl p-4 border border-white/20 shadow-lg hover:shadow-xl transition-all text-left"
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <MapPin className="w-5 h-5 text-blue-600" />
-                  <div className="flex items-center gap-1">
-                    <Shield className="w-4 h-4 text-green-600" />
-                    <span className="text-sm font-semibold text-green-600">
-                      {dest.safety}%
-                    </span>
-                  </div>
-                </div>
-                <div className="font-semibold text-slate-800">{dest.name}</div>
-                <div className="text-xs text-slate-500 mt-1">High Safety Score</div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+            {popularDestinations.map((dest, i) => (
+              <motion.button key={i}
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.5 + i * 0.05 }}
+                whileHover={{ scale: 1.04, y: -2 }} whileTap={{ scale: 0.97 }}
+                onClick={() => setDestination(dest.name)}
+                className={`bg-white/5 hover:bg-white/10 border rounded-2xl p-4 text-left transition-all ${destination === dest.name ? "border-yellow-400/50 bg-yellow-400/5" : "border-white/10"
+                  }`}>
+                <div className="text-2xl mb-2">{dest.emoji}</div>
+                <div className="text-white font-semibold text-sm">{dest.name}</div>
               </motion.button>
-            ))}
-          </div>
-        </motion.div>
-
-        {/* Features */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 }}
-          className="mt-16 text-center"
-        >
-          <div className="flex justify-center gap-12 flex-wrap">
-            {[
-              { icon: Shield, label: "24/7 Protection" },
-              { icon: Sparkles, label: "AI Powered" },
-              { icon: MapPin, label: "Live Tracking" },
-            ].map((item, idx) => (
-              <div key={idx} className="flex flex-col items-center gap-2">
-                <div className="p-3 bg-blue-100 rounded-xl">
-                  <item.icon className="w-6 h-6 text-blue-600" />
-                </div>
-                <span className="text-sm text-slate-600">{item.label}</span>
-              </div>
             ))}
           </div>
         </motion.div>

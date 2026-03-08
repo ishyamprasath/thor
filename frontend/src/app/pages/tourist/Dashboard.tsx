@@ -1,178 +1,180 @@
+import { useState, useEffect } from "react";
 import { motion } from "motion/react";
-import { Shield, MapPin, MessageSquare, AlertTriangle, Heart, Settings, User, LogOut, Navigation } from "lucide-react";
 import { useNavigate } from "react-router";
-import { Button } from "../../components/ui/button";
+import { MapPin, Calendar, Plus, ChevronRight, Zap, Target } from "lucide-react";
+import { useAuth } from "../../context/AuthContext";
+import { useTranslation } from "../../context/TranslationContext";
+import { Check, X, ShieldAlert } from "lucide-react";
 
-export default function TouristDashboard() {
+import { API_URL } from "../../config/api";
+
+export default function Dashboard() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { translate } = useTranslation();
+  const [activePlans, setActivePlans] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const quickActions = [
-    { icon: MapPin, label: "New Journey", path: "/tourist/destination", color: "blue" },
-    { icon: MessageSquare, label: "AI Concierge", path: "/tourist/concierge", color: "teal" },
-    { icon: AlertTriangle, label: "Emergency", path: "/tourist/emergency", color: "red" },
-    { icon: Navigation, label: "Active Trip", path: "/tourist/monitoring", color: "green" },
-  ];
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      setLoading(true);
+
+      if (user?.email) {
+        try {
+          const invRes = await fetch(`${API_URL}/enterprise/invitations/${user.email}`).then(r => r.json());
+          setInvitations(invRes.invitations || []);
+        } catch (e) {
+          console.error("Failed to load invitations", e);
+        }
+      }
+
+      const saved = localStorage.getItem("thor_active_plan");
+      if (saved) {
+        setActivePlans([JSON.parse(saved)]);
+      }
+
+      setLoading(false);
+    };
+
+    fetchDashboard();
+  }, [user]);
+
+  const acceptInvite = async (inviteId: string) => {
+    try {
+      await fetch(`${API_URL}/enterprise/invitations/${inviteId}/accept`, { method: "POST" });
+      setInvitations(invitations.filter(i => i.id !== inviteId));
+    } catch (e) {
+      console.error("Failed to accept", e);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="p-6 space-y-8 max-w-6xl mx-auto pb-32">
       {/* Header */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="bg-white/80 backdrop-blur-xl border-b border-white/20"
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Shield className="w-10 h-10 text-blue-600" />
-              <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  GuardianAI
-                </h1>
-                <p className="text-sm text-slate-600">Tourist Dashboard</p>
-              </div>
-            </div>
+      <div>
+        <h1 className="text-display gradient-text mb-2 tracking-tight">
+          {translate("Hello")}, {user?.name?.split(" ")[0] || translate("Traveler")}
+        </h1>
+        <p className="text-body text-zinc-400">
+          {translate("Where are we going today? Let's map your safe journey.")}
+        </p>
+      </div>
 
-            <div className="flex items-center gap-3">
-              <Button className="p-2 hover:bg-slate-100 rounded-lg">
-                <Settings className="w-5 h-5" />
-              </Button>
-              <Button onClick={() => navigate("/")} className="p-2 hover:bg-slate-100 rounded-lg">
-                <LogOut className="w-5 h-5" />
-              </Button>
-            </div>
+      {/* Primary Action */}
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigate("/planner")}
+        className="w-full relative overflow-hidden rounded-3xl p-8 flex flex-col sm:flex-row items-center justify-between gap-6 border border-zinc-800 shadow-[0_20px_40px_-15px_rgba(0,0,0,1)] group"
+        style={{ cursor: "pointer", background: "var(--thor-surface-2)" }}
+      >
+        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 scale-150 transition-transform duration-700 group-hover:rotate-45 group-hover:scale-110 pointer-events-none">
+          <Target className="w-64 h-64 text-yellow-500" />
+        </div>
+
+        <div className="relative z-10 text-left flex-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 mb-4 rounded-full bg-yellow-500/10 text-yellow-500 border border-yellow-500/20 text-xs font-bold tracking-wider uppercase">
+            <Zap className="w-3.5 h-3.5" fill="currentColor" /> {translate("AI Powered")}
+          </div>
+          <h2 className="text-3xl font-bold mb-2 tracking-tight" style={{ color: "var(--thor-text)" }}>{translate("Create a New Plan")}</h2>
+          <p className="text-zinc-400 max-w-md text-sm leading-relaxed">
+            {translate("Enter your destination and dates. Our AI will instantly build a fully-routed, safety-first itinerary optimized for you.")}
+          </p>
+        </div>
+
+        <div className="relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center bg-yellow-500 text-black flex-shrink-0 shadow-[0_0_30px_rgba(234,179,8,0.4)] transition-transform group-hover:scale-110">
+          <Plus className="w-8 h-8" />
+        </div>
+      </motion.button>
+
+      {/* Tracking Requests */}
+      {invitations.length > 0 && (
+        <div className="space-y-4">
+          <h3 className="text-lg font-bold tracking-tight flex items-center gap-2" style={{ color: "var(--thor-text)" }}>
+            <ShieldAlert className="w-5 h-5" style={{ color: "var(--thor-warn)" }} /> Tracking Requests
+          </h3>
+          <div className="space-y-3">
+            {invitations.map((inv) => (
+              <motion.div key={inv.id} initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+                className="card p-5 border shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4"
+                style={{ background: "var(--thor-surface-3)", borderColor: "var(--thor-warn)" }}>
+                <div>
+                  <h4 className="font-bold text-lg" style={{ color: "var(--thor-text)" }}>{inv.enterprise_name}</h4>
+                  <p className="text-sm mt-1" style={{ color: "var(--thor-text-muted)" }}>
+                    This organization is requesting to monitor your live location and safety telemetry during your trip.
+                  </p>
+                </div>
+                <div className="flex gap-2 shrink-0">
+                  <button onClick={() => setInvitations(invitations.filter(i => i.id !== inv.id))} className="btn btn-ghost">
+                    <X className="w-4 h-4" /> Decline
+                  </button>
+                  <button onClick={() => acceptInvite(inv.id)} className="btn btn-brand" style={{ background: "var(--thor-safe)", color: "#000" }}>
+                    <Check className="w-4 h-4" /> Accept Tracking
+                  </button>
+                </div>
+              </motion.div>
+            ))}
           </div>
         </div>
-      </motion.div>
+      )}
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Welcome Section */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-12"
-        >
-          <h2 className="text-4xl font-bold text-slate-800 mb-3">Welcome back, Traveler</h2>
-          <p className="text-lg text-slate-600">Your safety is our priority. Start your protected journey today.</p>
-        </motion.div>
+      {/* Active Plans List */}
+      <div>
+        <h3 className="text-lg font-bold mb-4 tracking-tight flex items-center gap-2" style={{ color: "var(--thor-text)" }}>
+          {translate("Your Journeys")}
+        </h3>
 
-        {/* Quick Actions */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12"
-        >
-          {quickActions.map((action, idx) => (
-            <motion.button
-              key={idx}
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 + idx * 0.1 }}
-              whileHover={{ scale: 1.05, y: -5 }}
-              onClick={() => navigate(action.path)}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 border border-white/20 shadow-lg hover:shadow-2xl transition-all text-left"
-            >
-              <div className={`w-14 h-14 rounded-xl bg-gradient-to-br from-${action.color}-500 to-${action.color}-600 flex items-center justify-center mb-4`}>
-                <action.icon className="w-7 h-7 text-white" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-800">{action.label}</h3>
-            </motion.button>
-          ))}
-        </motion.div>
-
-        <div className="grid lg:grid-cols-2 gap-8">
-          {/* Safety Status */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.5 }}
-            className="bg-gradient-to-br from-green-500 to-emerald-600 rounded-3xl p-8 text-white shadow-2xl"
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <div className="text-sm opacity-90 mb-1">Safety Status</div>
-                <div className="text-5xl font-bold">All Clear</div>
-              </div>
-              <Shield className="w-16 h-16 opacity-30" />
-            </div>
-            <div className="space-y-3">
-              {[
-                { label: "Protection Level", value: "Maximum" },
-                { label: "Monitoring", value: "24/7 Active" },
-                { label: "Emergency Response", value: "Ready" },
-              ].map((item, idx) => (
-                <div key={idx} className="flex justify-between items-center py-2 border-b border-white/20">
-                  <span className="opacity-90">{item.label}</span>
-                  <span className="font-semibold">{item.value}</span>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          {/* Features Overview */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.6 }}
-            className="bg-white/80 backdrop-blur-xl rounded-3xl p-8 border border-white/20 shadow-2xl"
-          >
-            <h3 className="text-2xl font-bold text-slate-800 mb-6">Your Protection Features</h3>
-            <div className="space-y-4">
-              {[
-                {
-                  icon: Shield,
-                  title: "Real-Time Monitoring",
-                  desc: "Continuous safety tracking with AI",
-                  color: "blue",
-                },
-                {
-                  icon: Heart,
-                  title: "Safety Pulse Check",
-                  desc: "Regular well-being confirmations",
-                  color: "red",
-                },
-                {
-                  icon: MapPin,
-                  title: "Smart Route Planning",
-                  desc: "AI-optimized safe navigation",
-                  color: "green",
-                },
-                {
-                  icon: MessageSquare,
-                  title: "24/7 AI Assistant",
-                  desc: "Instant help and guidance",
-                  color: "teal",
-                },
-              ].map((feature, idx) => (
-                <div key={idx} className="flex items-start gap-4 p-4 bg-slate-50 rounded-xl">
-                  <div className={`w-12 h-12 rounded-lg bg-${feature.color}-100 flex items-center justify-center flex-shrink-0`}>
-                    <feature.icon className={`w-6 h-6 text-${feature.color}-600`} />
+        {loading ? (
+          <div className="animate-pulse flex gap-4 overflow-x-auto pb-4">
+            {[1, 2].map(i => (
+              <div key={i} className="min-w-[300px] h-40 rounded-2xl border" style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }} />
+            ))}
+          </div>
+        ) : activePlans.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {activePlans.map((plan, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => navigate(`/planner/active`)}
+                className="border rounded-2xl p-5 transition-colors cursor-pointer group shadow-xl"
+                style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }}
+              >
+                <div className="flex justify-between items-start mb-4">
+                  <div className="p-3 bg-blue-500/10 text-blue-500 rounded-xl">
+                    <MapPin className="w-6 h-6" />
                   </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-800 mb-1">{feature.title}</h4>
-                    <p className="text-sm text-slate-600">{feature.desc}</p>
+                  <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md bg-zinc-800 text-zinc-400">
+                    {translate("Active")}
                   </div>
                 </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
 
-        {/* CTA */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-          className="mt-12 text-center"
-        >
-          <Button
-            onClick={() => navigate("/tourist/destination")}
-            className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-12 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-          >
-            Start New Journey
-          </Button>
-        </motion.div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-xl font-bold mb-1 truncate block" title={plan.destination} style={{ color: "var(--thor-text)" }}>
+                    {plan.destination}
+                  </h4>
+                  <div className="flex items-center gap-4 text-xs text-zinc-500 mt-2">
+                    <span className="flex items-center gap-1.5 whitespace-nowrap"><Calendar className="w-3.5 h-3.5 flex-shrink-0" /> <span className="truncate">{plan.duration} {translate("Days")}</span></span>
+                    <span className="flex items-center gap-1.5 whitespace-nowrap"><MapPin className="w-3.5 h-3.5 flex-shrink-0" /> <span className="truncate">{plan.stops?.length || 0} {translate("Stops")}</span></span>
+                  </div>
+                </div>
+
+                <div className="mt-5 pt-4 border-t border-zinc-800 flex items-center justify-between text-yellow-500 font-semibold text-sm group-hover:text-white transition-colors">
+                  {translate("View Dashboard")}
+                  <ChevronRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-16 px-4 rounded-3xl border border-dashed" style={{ background: "var(--thor-surface)", borderColor: "var(--thor-border)" }}>
+            <MapPin className="w-12 h-12 mx-auto mb-4" style={{ color: "var(--thor-text-muted)" }} />
+            <h3 className="text-lg font-semibold text-zinc-300 mb-2">{translate("No active plans")}</h3>
+            <p className="text-zinc-500 text-sm">{translate("Create a new plan to start your journey.")}</p>
+          </div>
+        )}
       </div>
     </div>
   );

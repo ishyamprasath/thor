@@ -1,64 +1,77 @@
-import { createBrowserRouter } from "react-router";
-import Landing from "./pages/Landing";
-import TouristDashboard from "./pages/tourist/Dashboard";
-import TouristDestination from "./pages/tourist/Destination";
-import TouristRoutePlanner from "./pages/tourist/RoutePlanner";
-import TouristMonitoring from "./pages/tourist/Monitoring";
-import TouristConcierge from "./pages/tourist/Concierge";
-import TouristEmergency from "./pages/tourist/Emergency";
-import EnterpriseDashboard from "./pages/enterprise/Dashboard";
-import EnterpriseOnboarding from "./pages/enterprise/Onboarding";
-import EnterpriseTripPlanner from "./pages/enterprise/TripPlanner";
-import EnterpriseTouristView from "./pages/enterprise/TouristView";
-import EnterpriseAuthority from "./pages/enterprise/Authority";
+import { createBrowserRouter, Navigate } from "react-router";
+import AppShell from "./layouts/AppShell";
+import EnterpriseShell from "./layouts/EnterpriseShell";
+import AuthLayout from "./layouts/AuthLayout";
+
+// Auth pages
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+
+// Tourist pages
+import Dashboard from "./pages/tourist/Dashboard";
+import SafetyMap from "./pages/tourist/SafetyMap";
+import TripPlanner from "./pages/tourist/TripPlanner";
+import ActiveJourney from "./pages/tourist/ActiveJourney";
+import SafetyMonitor from "./pages/tourist/SafetyMonitor";
+import Concierge from "./pages/tourist/Concierge";
+import GlobalChatbot from "./pages/tourist/GlobalChatbot";
+import Community from "./pages/tourist/Community";
+import VoiceAI from "./pages/tourist/VoiceAI";
+import Emergency from "./pages/tourist/Emergency";
+import Profile from "./pages/tourist/Profile";
+import SettingsPage from "./pages/Settings";
+
+// Enterprise pages
+import EnterpriseHome from './pages/enterprise/EnterpriseHome';
+import CommandCenter from "./pages/enterprise/CommandCenter";
+import EnterpriseTrips from "./pages/enterprise/Trips";
+import TouristView from "./pages/enterprise/TouristView";
+import Authority from "./pages/enterprise/Authority";
+import ActivityFeed from "./pages/enterprise/ActivityFeed";
 
 export const router = createBrowserRouter([
+  // Public — Auth layout
   {
-    path: "/",
-    element: <Landing />,
+    element: <AuthLayout />,
+    children: [
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+    ],
   },
+
+  // Protected — App shell
   {
-    path: "/tourist/dashboard",
-    element: <TouristDashboard />,
+    element: <AppShell />,
+    children: [
+      // Tourist mode
+      { path: "/dashboard", element: <Dashboard /> },
+      { path: "/map", element: <SafetyMap /> },
+      { path: "/planner", element: <TripPlanner /> },
+      { path: "/planner/active", element: <ActiveJourney /> },
+      { path: "/planner/navigate", element: <SafetyMonitor /> },
+      { path: "/concierge", element: <Concierge /> },
+      { path: "/chat", element: <GlobalChatbot /> },
+      { path: "/community", element: <Community /> },
+      { path: "/voice", element: <VoiceAI /> },
+      { path: "/emergency", element: <Emergency /> },
+      { path: "/profile", element: <Profile /> },
+      { path: "/settings", element: <SettingsPage /> },
+    ],
   },
+
+  // Protected — Enterprise Shell (Desktop Landscape)
   {
-    path: "/tourist/destination",
-    element: <TouristDestination />,
+    element: <EnterpriseShell />,
+    children: [
+      { path: "/enterprise", element: <EnterpriseHome /> }, // New "Home" for enterprise
+      { path: "/enterprise/trip/:id", element: <CommandCenter /> }, // CommandCenter now specific to a trip
+      { path: "/enterprise/trips", element: <EnterpriseTrips /> },
+      { path: "/enterprise/tourist/:id", element: <TouristView /> },
+      { path: "/enterprise/authority", element: <Authority /> },
+      { path: "/enterprise/activity", element: <ActivityFeed /> },
+    ]
   },
-  {
-    path: "/tourist/route-planner",
-    element: <TouristRoutePlanner />,
-  },
-  {
-    path: "/tourist/monitoring",
-    element: <TouristMonitoring />,
-  },
-  {
-    path: "/tourist/concierge",
-    element: <TouristConcierge />,
-  },
-  {
-    path: "/tourist/emergency",
-    element: <TouristEmergency />,
-  },
-  {
-    path: "/enterprise/onboarding",
-    element: <EnterpriseOnboarding />,
-  },
-  {
-    path: "/enterprise/dashboard",
-    element: <EnterpriseDashboard />,
-  },
-  {
-    path: "/enterprise/trip-planner",
-    element: <EnterpriseTripPlanner />,
-  },
-  {
-    path: "/enterprise/tourist/:id",
-    element: <EnterpriseTouristView />,
-  },
-  {
-    path: "/enterprise/authority",
-    element: <EnterpriseAuthority />,
-  },
+
+  // Root redirect
+  { path: "/", element: <Navigate to="/login" replace /> },
 ]);

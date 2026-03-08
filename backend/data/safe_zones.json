@@ -1,0 +1,302 @@
+[
+    {
+        "location_id": "sz001",
+        "name": "Kovaipudur Police Station",
+        "category": "police_station",
+        "latitude": 10.9275,
+        "longitude": 76.9356,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2573100",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz002",
+        "name": "Peelamedu Police Station",
+        "category": "police_station",
+        "latitude": 11.0245,
+        "longitude": 77.0021,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2574200",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz003",
+        "name": "RS Puram Police Station",
+        "category": "police_station",
+        "latitude": 11.0048,
+        "longitude": 76.9553,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2544100",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz004",
+        "name": "Coimbatore Medical College Hospital",
+        "category": "hospital",
+        "latitude": 11.0183,
+        "longitude": 76.9674,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2301393",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz005",
+        "name": "PSG Hospitals",
+        "category": "hospital",
+        "latitude": 11.0245,
+        "longitude": 77.0023,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2570170",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz006",
+        "name": "KMCH Hospital",
+        "category": "hospital",
+        "latitude": 11.0324,
+        "longitude": 76.9987,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-4323800",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz007",
+        "name": "Ganga Hospital",
+        "category": "hospital",
+        "latitude": 10.9968,
+        "longitude": 76.9612,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2485000",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz008",
+        "name": "Sri Ramakrishna Hospital",
+        "category": "hospital",
+        "latitude": 11.0116,
+        "longitude": 76.9762,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-4500000",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz009",
+        "name": "US Consulate General Chennai",
+        "category": "embassy",
+        "latitude": 13.0604,
+        "longitude": 80.2496,
+        "operating_hours": "8:00-17:00 Mon-Fri",
+        "contact_number": "+91-44-28574000",
+        "city": "Chennai"
+    },
+    {
+        "location_id": "sz010",
+        "name": "British Deputy High Commission Chennai",
+        "category": "embassy",
+        "latitude": 13.0614,
+        "longitude": 80.2513,
+        "operating_hours": "8:30-17:00 Mon-Fri",
+        "contact_number": "+91-44-42192151",
+        "city": "Chennai"
+    },
+    {
+        "location_id": "sz011",
+        "name": "Coimbatore City Fire Station",
+        "category": "fire_station",
+        "latitude": 11.0005,
+        "longitude": 76.9638,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2394444",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz012",
+        "name": "Sulur Air Force Station",
+        "category": "military",
+        "latitude": 11.0004,
+        "longitude": 77.1488,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2687222",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz013",
+        "name": "Coimbatore Railway Station Shelter",
+        "category": "verified_shelter",
+        "latitude": 11.0018,
+        "longitude": 76.9677,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2301234",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz014",
+        "name": "Gandhipuram Bus Stand (Safe Zone)",
+        "category": "verified_shelter",
+        "latitude": 11.0168,
+        "longitude": 76.9558,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2490670",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz015",
+        "name": "Coimbatore International Airport",
+        "category": "verified_shelter",
+        "latitude": 11.0300,
+        "longitude": 77.0434,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2573666",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz016",
+        "name": "Paris 1er — Commissariat",
+        "category": "police_station",
+        "latitude": 48.8612,
+        "longitude": 2.3470,
+        "operating_hours": "24/7",
+        "contact_number": "+33-1-42609622",
+        "city": "Paris"
+    },
+    {
+        "location_id": "sz017",
+        "name": "Hôpital Hôtel-Dieu",
+        "category": "hospital",
+        "latitude": 48.8539,
+        "longitude": 2.3488,
+        "operating_hours": "24/7",
+        "contact_number": "+33-1-42348256",
+        "city": "Paris"
+    },
+    {
+        "location_id": "sz018",
+        "name": "American Hospital of Paris",
+        "category": "hospital",
+        "latitude": 48.8718,
+        "longitude": 2.2616,
+        "operating_hours": "24/7",
+        "contact_number": "+33-1-46412525",
+        "city": "Paris"
+    },
+    {
+        "location_id": "sz019",
+        "name": "Dubai Police HQ",
+        "category": "police_station",
+        "latitude": 25.2633,
+        "longitude": 55.3068,
+        "operating_hours": "24/7",
+        "contact_number": "+971-4-6013999",
+        "city": "Dubai"
+    },
+    {
+        "location_id": "sz020",
+        "name": "Rashid Hospital",
+        "category": "hospital",
+        "latitude": 25.2356,
+        "longitude": 55.3090,
+        "operating_hours": "24/7",
+        "contact_number": "+971-4-2192000",
+        "city": "Dubai"
+    },
+    {
+        "location_id": "sz021",
+        "name": "Tokyo Metropolitan Police Marunouchi",
+        "category": "police_station",
+        "latitude": 35.6812,
+        "longitude": 139.7671,
+        "operating_hours": "24/7",
+        "contact_number": "+81-3-3503-8484",
+        "city": "Tokyo"
+    },
+    {
+        "location_id": "sz022",
+        "name": "St. Luke's International Hospital",
+        "category": "hospital",
+        "latitude": 35.6700,
+        "longitude": 139.7782,
+        "operating_hours": "24/7",
+        "contact_number": "+81-3-3541-5151",
+        "city": "Tokyo"
+    },
+    {
+        "location_id": "sz023",
+        "name": "Singapore General Hospital",
+        "category": "hospital",
+        "latitude": 1.2789,
+        "longitude": 103.8367,
+        "operating_hours": "24/7",
+        "contact_number": "+65-6222-3322",
+        "city": "Singapore"
+    },
+    {
+        "location_id": "sz024",
+        "name": "Tanglin Police Division HQ",
+        "category": "police_station",
+        "latitude": 1.3040,
+        "longitude": 103.8148,
+        "operating_hours": "24/7",
+        "contact_number": "+65-1800-2550000",
+        "city": "Singapore"
+    },
+    {
+        "location_id": "sz025",
+        "name": "NYPD Times Square Substation",
+        "category": "police_station",
+        "latitude": 40.7580,
+        "longitude": -73.9855,
+        "operating_hours": "24/7",
+        "contact_number": "+1-212-768-1276",
+        "city": "New York"
+    },
+    {
+        "location_id": "sz026",
+        "name": "NYU Langone Medical Center",
+        "category": "hospital",
+        "latitude": 40.7421,
+        "longitude": -73.9739,
+        "operating_hours": "24/7",
+        "contact_number": "+1-212-263-7300",
+        "city": "New York"
+    },
+    {
+        "location_id": "sz027",
+        "name": "BIMC Hospital Kuta",
+        "category": "hospital",
+        "latitude": -8.7234,
+        "longitude": 115.1723,
+        "operating_hours": "24/7",
+        "contact_number": "+62-361-761263",
+        "city": "Bali"
+    },
+    {
+        "location_id": "sz028",
+        "name": "Kuta Police Station",
+        "category": "police_station",
+        "latitude": -8.7233,
+        "longitude": 115.1699,
+        "operating_hours": "24/7",
+        "contact_number": "+62-361-751598",
+        "city": "Bali"
+    },
+    {
+        "location_id": "sz029",
+        "name": "Sadar Police Station Coimbatore",
+        "category": "police_station",
+        "latitude": 11.0012,
+        "longitude": 76.9612,
+        "operating_hours": "24/7",
+        "contact_number": "+91-422-2396262",
+        "city": "Coimbatore"
+    },
+    {
+        "location_id": "sz030",
+        "name": "Coimbatore District Collector Office (Emergency Shelter)",
+        "category": "verified_shelter",
+        "latitude": 11.0051,
+        "longitude": 76.9614,
+        "operating_hours": "9:00-18:00 Mon-Sat",
+        "contact_number": "+91-422-2300222",
+        "city": "Coimbatore"
+    }
+]
