@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { useAuth } from "../context/AuthContext";
 import TopBar from "./TopBar";
 import BottomNav from "./BottomNav";
+import InstallPrompt from "../components/InstallPrompt";
 
 export default function AppShell() {
     const { token } = useAuth();
@@ -42,6 +43,8 @@ export default function AppShell() {
                 {/* Fixed Footer Navigation */}
                 <BottomNav />
             </div>
+
+            <InstallPrompt />
         </>
     );
 }

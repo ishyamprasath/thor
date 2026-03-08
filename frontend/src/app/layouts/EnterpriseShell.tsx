@@ -8,6 +8,7 @@ import {
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../context/TranslationContext";
 import { useTheme } from "../context/ThemeContext";
+import InstallPrompt from "../components/InstallPrompt";
 
 export default function EnterpriseShell() {
     const { token, user, logout } = useAuth();
@@ -178,6 +179,8 @@ export default function EnterpriseShell() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            <InstallPrompt />
         </main>
     );
 }
