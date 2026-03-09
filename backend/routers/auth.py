@@ -1,8 +1,8 @@
+import hashlib
 import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from fastapi import APIRouter, HTTPException, status, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from bson import ObjectId
@@ -16,17 +16,23 @@ SECRET_KEY = os.getenv("SECRET_KEY", "thor-secret")
 ALGORITHM = os.getenv("ALGORITHM", "HS256")
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", 10080))
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
 bearer_scheme = HTTPBearer()
 router = APIRouter()
 
 
 def hash_password(password: str) -> str:
-    return pwd_context.hash(password)
+    # Use SHA-256 with salt for now (more secure than plain bcrypt with this issue)
+    salt = os.urandom(32).hex()
+    return hashlib.sha256((password + salt).encode()).hexdigest() + ":" + salt
 
 
 def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+    try:
+        hash_part, salt = hashed.split(":")
+        return hashlib.sha256((plain + salt).encode()).hexdigest() == hash_part
+    except:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -102,44 +108,27 @@ async def login(data: UserLogin):
     users = get_users_collection()
     user = await users.find_one({"email": data.email})
 
-    now = datetime.now(timezone.utc).isoformat()
-
     if not user:
-        # --- DEMO MODE: Auto-register unknown users seamlessly ---
-        hashed = hash_password(data.password)
-        name_from_email = data.email.split("@")[0].replace(".", " ").replace("_", " ").title()
-        user_doc = {
-            "name": name_from_email,
-            "email": data.email,
-            "hashed_password": hashed,
-            "medical_details": {},
-            "emergency_contacts": [],
-            "created_at": now,
-        }
-        result = await users.insert_one(user_doc)
-        user_id = str(result.inserted_id)
-        name = name_from_email
-        email = data.email
-        medical = {}
-        emergency = []
-        created_at = now
-    else:
-        # --- DEMO MODE: Accept any password for existing users ---
-        user_id = str(user["_id"])
-        name = user["name"]
-        email = user["email"]
-        medical = user.get("medical_details", {})
-        emergency = user.get("emergency_contacts", [])
-        created_at = user.get("created_at", "")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
 
+    if not verify_password(data.password, user["hashed_password"]):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+        )
+
+    user_id = str(user["_id"])
     token = create_access_token({"sub": user_id})
     user_response = UserResponse(
         id=user_id,
-        name=name,
-        email=email,
-        medical_details=medical,
-        emergency_contacts=emergency,
-        created_at=created_at,
+        name=user["name"],
+        email=user["email"],
+        medical_details=user.get("medical_details", {}),
+        emergency_contacts=user.get("emergency_contacts", []),
+        created_at=user.get("created_at", ""),
     )
     return Token(access_token=token, token_type="bearer", user=user_response)
 

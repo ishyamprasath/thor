@@ -53,36 +53,16 @@ export default function TouristRegister() {
         setLoading(true);
         setError("");
 
-        const contacts = [
-            form.ec1_name ? { name: form.ec1_name, phone: form.ec1_phone, relation: form.ec1_relation } : null,
-            form.ec2_name ? { name: form.ec2_name, phone: form.ec2_phone, relation: form.ec2_relation } : null,
-            form.ec3_name ? { name: form.ec3_name, phone: form.ec3_phone, relation: form.ec3_relation } : null,
-        ].filter(Boolean);
-
-        const payload = {
-            name: form.name, email: form.email, password: form.password,
-            medical_details: {
-                blood_group: form.blood_group, allergies: form.allergies,
-                conditions: form.conditions, medications: form.medications,
-            },
-            emergency_contacts: contacts,
-        };
-
-        try {
-            const res = await fetch(`${API_URL}/auth/register`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+        // Pure frontend auth — no backend call
+        setTimeout(() => {
+            login("thor_session_" + Date.now(), {
+                id: "user_" + Date.now(),
+                name: form.name,
+                email: form.email,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Registration failed");
-            login(data.access_token, data.user);
             navigate("/tourist/permissions");
-        } catch (err: any) {
-            setError(err.message);
-        } finally {
             setLoading(false);
-        }
+        }, 600);
     };
 
     const inputClass = "w-full bg-white/5 border border-white/10 rounded-xl py-3.5 px-4 text-white placeholder-slate-500 focus:outline-none focus:border-yellow-400/50 focus:bg-white/10 transition-all text-sm";
@@ -113,8 +93,8 @@ export default function TouristRegister() {
                         <div key={i} className="flex items-center gap-2">
                             <motion.div animate={{ scale: i === step ? 1.1 : 1 }}
                                 className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all ${i < step ? "bg-green-500 text-white" :
-                                        i === step ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" :
-                                            "bg-white/10 text-slate-500"
+                                    i === step ? "bg-gradient-to-r from-yellow-500 to-orange-500 text-white" :
+                                        "bg-white/10 text-slate-500"
                                     }`}>
                                 {i < step ? <Check className="w-4 h-4" /> : i + 1}
                             </motion.div>

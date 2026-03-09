@@ -1,117 +1,385 @@
-import { useState, useEffect } from "react";
-import { motion } from "motion/react";
-import { Mic, MicOff, Settings, Zap, X } from "lucide-react";
-import { useTranslation } from "../../context/TranslationContext";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "motion/react";
+import { Mic, MicOff, Zap, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
+import { API_URL } from "../../config/api";
+
+/**
+ * AUTONOMOUS VOICE AGENT
+ * ─────────────────────────────────────────────────────────────────────────────
+ * Flow:
+ *   1. User grants mic permission once (on page load)
+ *   2. Recognition runs CONTINUOUSLY
+ *   3. A 1.2-second silence timer fires after each speech burst → auto-processes
+ *   4. AI speaks reply (TTS), executes app command
+ *   5. Returns to Listening automatically — no user action ever needed
+ */
+
+type Phase = "permission" | "listening" | "processing" | "speaking" | "error";
+
+const SILENCE_MS = 1200; // ms of silence before auto-processing
+const GEMINI_MODEL = "gemini-3-flash-preview";  // for display only; backend uses this model
 
 export default function VoiceAI() {
-    const { translate } = useTranslation();
+    const { token } = useAuth();
     const navigate = useNavigate();
-    const [isListening, setIsListening] = useState(false);
-    const [transcript, setTranscript] = useState("Listening for your command...");
 
-    // Simulate voice assistant greeting
-    useEffect(() => {
-        if (isListening) {
-            setTranscript("Listening...");
-            const timer = setTimeout(() => {
-                setTranscript("How can THOR assist your journey today?");
-            }, 2000);
-            return () => clearTimeout(timer);
-        } else {
-            setTranscript("Tap the microphone to speak");
+    const [phase, setPhase] = useState<Phase>("permission");
+    const [liveText, setLiveText] = useState("");         // what the user is saying right now (interim)
+    const [aiText, setAiText] = useState("");         // what the AI replied
+    const [statusMsg, setStatusMsg] = useState("Tap Allow to activate THOR Voice");
+
+    const finalRef = useRef("");   // final transcript accumulator
+    const interimRef = useRef("");   // live interim text
+    const silenceTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const recRef = useRef<any>(null);
+    const activeRef = useRef(false); // is recognition currently running?
+
+    // ─── TTS helper ─────────────────────────────────────────────────────────
+    const speak = useCallback((text: string): Promise<void> => {
+        return new Promise((resolve) => {
+            if (!("speechSynthesis" in window)) { resolve(); return; }
+            window.speechSynthesis.cancel();
+            const u = new SpeechSynthesisUtterance(text);
+            u.lang = "en-US"; u.rate = 1.08;
+            u.onend = () => resolve();
+            u.onerror = () => resolve();
+            window.speechSynthesis.speak(u);
+        });
+    }, []);
+
+    // ─── Fully automated trip generation (voice → plan → itinerary) ────────────
+    const autoPlan = useCallback(async (destination: string, days: number) => {
+        setPhase("processing");
+        setStatusMsg(`Planning ${days}-day trip to ${destination}...`);
+        setAiText(`Generating itinerary with hotels, restaurants & top spots...`);
+        speak(`Perfect! I'm now building your complete ${days}-day trip to ${destination}, with hotels, restaurants, and top attractions. Give me just a moment.`);
+
+        const start = new Date();
+        const end = new Date(); end.setDate(start.getDate() + days);
+        const fmt = (d: Date) => d.toISOString().split("T")[0];
+
+        try {
+            const res = await fetch(`${API_URL}/trip/generate`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ destination, start_date: fmt(start), end_date: fmt(end), traveler_name: "Traveler" }),
+            });
+            const data = await res.json();
+
+            if (data.status === "success" && data.plan) {
+                localStorage.setItem("thor_active_plan", JSON.stringify(data.plan));
+                setAiText(`✅ Your ${destination} itinerary is ready!`);
+                setStatusMsg("Opening your trip now...");
+                setPhase("speaking");
+                await speak(`Your ${days}-day itinerary for ${destination} is ready! I've selected a great hotel and planned all your meals and sightseeing. Opening your trip now!`);
+                navigate("/planner/active");
+            } else { throw new Error("failed"); }
+        } catch {
+            const msg = `I couldn't generate the ${destination} plan. Please try again.`;
+            setAiText(msg); setPhase("error"); setStatusMsg("Plan generation failed");
+            await speak(msg);
+            setTimeout(() => { setPhase("listening"); setAiText(""); setStatusMsg("Listening..."); startRecognition(); }, 2000);
         }
-    }, [isListening]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, navigate, speak]);
+
+    // ─── Execute command returned by backend ─────────────────────────────────
+    const execCommand = useCallback((cmd: any) => {
+        if (!cmd) return;
+        switch (cmd.type) {
+            case "navigate": navigate(cmd.path); break;
+            case "auto_plan":
+                autoPlan(cmd.destination || "your destination", Number(cmd.days) || 3);
+                break;
+            case "open_planner":
+                if (cmd.destination) localStorage.setItem("thor-voice-destination", cmd.destination);
+                navigate("/planner");
+                break;
+            case "create_trip":
+                localStorage.setItem("thor-active-trip", JSON.stringify({
+                    destination: cmd.dest, startDate: cmd.start, endDate: cmd.end,
+                    created_at: new Date().toISOString(),
+                }));
+                navigate("/planner/active");
+                break;
+        }
+    }, [navigate, autoPlan]);
+
+
+    // ─── Send transcript to Gemini backend ──────────────────────────────────
+    const processCommand = useCallback(async (text: string) => {
+        if (!text.trim()) return;
+        setPhase("processing");
+        setLiveText("");
+        setAiText("");
+        setStatusMsg("Processing...");
+
+        try {
+            const res = await fetch(`${API_URL}/trip/chat`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+                body: JSON.stringify({ message: text, language: "English", context: "global" }),
+            });
+            const data = await res.json();
+            const reply = data.reply || "Got it.";
+            setAiText(reply);
+            setPhase("speaking");
+            setStatusMsg("Speaking...");
+            await speak(reply);
+            execCommand(data.command);
+
+            if (!data.command) {
+                // No navigation — keep listening
+                setPhase("listening");
+                setAiText("");
+                setStatusMsg("Listening for your next command...");
+                startRecognition();
+            }
+        } catch {
+            const err = "Network error. Please try again.";
+            setAiText(err);
+            setPhase("error");
+            await speak(err);
+            setTimeout(() => {
+                setPhase("listening");
+                setAiText("");
+                setStatusMsg("Listening...");
+                startRecognition();
+            }, 1500);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [token, speak, execCommand]);
+
+    // ─── Silence-based auto-fire ─────────────────────────────────────────────
+    const scheduleSilenceCheck = useCallback(() => {
+        if (silenceTimer.current) clearTimeout(silenceTimer.current);
+        silenceTimer.current = setTimeout(() => {
+            const heard = finalRef.current.trim() || interimRef.current.trim();
+            if (heard && recRef.current && activeRef.current) {
+                recRef.current.stop();            // onend → will call processCommand
+                activeRef.current = false;
+            }
+        }, SILENCE_MS);
+    }, []);
+
+    // ─── Start recognition ───────────────────────────────────────────────────
+    const startRecognition = useCallback(() => {
+        if (!recRef.current || activeRef.current) return;
+        finalRef.current = "";
+        interimRef.current = "";
+        try {
+            recRef.current.start();
+            activeRef.current = true;
+        } catch { /* recognition already running */ }
+    }, []);
+
+    // ─── Initialize SpeechRecognition ────────────────────────────────────────
+    useEffect(() => {
+        const SR = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+        if (!SR) {
+            setPhase("error");
+            setStatusMsg("Voice AI requires Chrome or Edge browser.");
+            return;
+        }
+
+        const rec = new SR();
+        rec.continuous = true;          // keep listening until .stop() is called
+        rec.interimResults = true;
+        rec.lang = "en-US";
+
+        rec.onstart = () => {
+            setPhase("listening");
+            setStatusMsg("Listening...");
+        };
+
+        rec.onresult = (event: any) => {
+            let interim = "";
+            let final = "";
+            for (let i = event.resultIndex; i < event.results.length; i++) {
+                const t = event.results[i][0].transcript;
+                if (event.results[i].isFinal) final += t + " ";
+                else interim = t;
+            }
+            if (final) finalRef.current += final;
+            interimRef.current = interim;
+
+            // Show live text
+            setLiveText(finalRef.current + interim);
+            scheduleSilenceCheck();
+        };
+
+        rec.onerror = (e: any) => {
+            activeRef.current = false;
+            if (e.error === "no-speech") {
+                // Nothing heard, restart passively
+                startRecognition();
+            } else if (e.error !== "aborted") {
+                setPhase("error");
+                setStatusMsg("Mic error: " + e.error);
+            }
+        };
+
+        rec.onend = () => {
+            activeRef.current = false;
+            const heard = (finalRef.current + interimRef.current).trim();
+            if (heard && (phase === "listening" || phase === "permission")) {
+                processCommand(heard);
+            }
+        };
+
+        recRef.current = rec;
+
+        // Auto-request permission and start straight away
+        navigator.mediaDevices?.getUserMedia({ audio: true })
+            .then(() => {
+                setStatusMsg("Listening...");
+                startRecognition();
+            })
+            .catch(() => {
+                setPhase("error");
+                setStatusMsg("Microphone permission denied.");
+            });
+
+        return () => {
+            if (silenceTimer.current) clearTimeout(silenceTimer.current);
+            rec.stop();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    // Update onend when processCommand changes (to avoid stale closures)
+    useEffect(() => {
+        if (!recRef.current) return;
+        recRef.current.onend = () => {
+            activeRef.current = false;
+            const heard = (finalRef.current + interimRef.current).trim();
+            if (heard) processCommand(heard);
+        };
+    }, [processCommand]);
+
+    // ─── Phase colours ───────────────────────────────────────────────────────
+    const orbColor =
+        phase === "listening" ? "from-red-600 to-pink-600" :
+            phase === "processing" ? "from-yellow-500 to-amber-600" :
+                phase === "speaking" ? "from-blue-500 to-cyan-600" : "from-zinc-700 to-zinc-800";
+
+    const glowColor =
+        phase === "listening" ? "rgba(239,68,68,0.55)" :
+            phase === "processing" ? "rgba(234,179,8,0.45)" :
+                phase === "speaking" ? "rgba(59,130,246,0.45)" : "transparent";
+
+    const pulseColor =
+        phase === "listening" ? "bg-red-500/25" :
+            phase === "processing" ? "bg-yellow-500/20" :
+                phase === "speaking" ? "bg-blue-500/25" : "bg-transparent";
 
     return (
-        <div className="w-full h-full min-h-[80vh] flex flex-col items-center justify-center relative p-8">
-            {/* Header elements */}
-            <div className="absolute top-6 left-0 right-0 flex justify-between items-center px-4 w-full">
-                <button onClick={() => navigate(-1)} className="p-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
-                    <X className="w-5 h-5" />
-                </button>
-                <div className="flex items-center gap-1.5 bg-red-500/10 text-red-500 px-3 py-1.5 rounded-full border border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
-                    <Zap className="w-4 h-4" />
-                    <span className="text-xs font-bold uppercase tracking-wider">Live Audio</span>
-                </div>
-                <button className="p-2 bg-zinc-900 border border-zinc-800 rounded-full text-zinc-400 hover:text-white transition-colors">
-                    <Settings className="w-5 h-5" />
-                </button>
+        <div className="w-full h-full min-h-[80vh] flex flex-col items-center justify-center relative p-6 bg-black overflow-hidden">
+
+            {/* Status badge */}
+            <div className={`absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest transition-all duration-500 ${phase === "listening" ? "bg-red-500/10 border-red-500/30 text-red-400" :
+                phase === "processing" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400" :
+                    phase === "speaking" ? "bg-blue-500/10 border-blue-500/30 text-blue-400" :
+                        "bg-zinc-900 border-zinc-700 text-zinc-500"
+                }`}>
+                <Zap className="w-3 h-3" fill="currentColor" />
+                THOR Voice · {GEMINI_MODEL}
             </div>
 
-            {/* Glowing Orb Container */}
-            <div className="relative mb-16 mt-8 flex items-center justify-center">
-                {/* Outer animated rings */}
-                {isListening && (
-                    <>
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0.8 }}
-                            animate={{ scale: 2, opacity: 0 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "easeOut" }}
-                            className="absolute w-40 h-40 bg-red-500/30 rounded-full"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0.8 }}
-                            animate={{ scale: 2.5, opacity: 0 }}
-                            transition={{ duration: 2, delay: 0.5, repeat: Infinity, ease: "easeOut" }}
-                            className="absolute w-40 h-40 bg-red-500/20 rounded-full"
-                        />
-                        <motion.div
-                            initial={{ scale: 0.8, opacity: 0.8 }}
-                            animate={{ scale: 3, opacity: 0 }}
-                            transition={{ duration: 2, delay: 1, repeat: Infinity, ease: "easeOut" }}
-                            className="absolute w-40 h-40 bg-yellow-500/10 rounded-full"
-                        />
-                    </>
+            {/* Orb */}
+            <div className="relative flex items-center justify-center mb-10 mt-14">
+                {/* Pulse rings */}
+                {(phase === "listening" || phase === "speaking") && [0, 0.4, 0.8].map((delay, i) => (
+                    <motion.div key={i}
+                        initial={{ scale: 1, opacity: 0.6 }}
+                        animate={{ scale: 2.8, opacity: 0 }}
+                        transition={{ duration: 2, repeat: Infinity, ease: "easeOut", delay }}
+                        className={`absolute w-36 h-36 rounded-full ${pulseColor}`}
+                    />
+                ))}
+
+                {/* Main orb */}
+                <motion.div
+                    animate={{ scale: phase === "listening" ? [1, 1.06, 1] : 1 }}
+                    transition={{ duration: 1.2, repeat: Infinity, ease: "easeInOut" }}
+                    className={`w-36 h-36 rounded-full bg-gradient-to-br ${orbColor} flex items-center justify-center shadow-2xl transition-all duration-500`}
+                    style={{ boxShadow: `0 0 60px ${glowColor}` }}
+                >
+                    {phase === "processing" ? (
+                        <Loader2 className="w-14 h-14 text-white animate-spin" />
+                    ) : phase === "listening" ? (
+                        <Mic className="w-14 h-14 text-white drop-shadow" />
+                    ) : (
+                        <MicOff className="w-14 h-14 text-white/60" />
+                    )}
+                </motion.div>
+            </div>
+
+            {/* Phase label */}
+            <h2 className="text-2xl font-black text-white tracking-tight mb-1">
+                {phase === "listening" ? "Listening..." :
+                    phase === "processing" ? "Processing" :
+                        phase === "speaking" ? "THOR Speaking" : "Voice Agent"}
+            </h2>
+            <p className="text-sm text-zinc-500 mb-6">{statusMsg}</p>
+
+            {/* Live transcript bubble */}
+            <AnimatePresence>
+                {liveText && phase === "listening" && (
+                    <motion.div
+                        key="live"
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="max-w-sm w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3 mb-4"
+                    >
+                        <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-1">You said</p>
+                        <p className="text-white text-sm leading-relaxed">{liveText}</p>
+                    </motion.div>
                 )}
 
-                {/* Core Button */}
-                <button
-                    onClick={() => setIsListening(!isListening)}
-                    className={`relative z-10 w-40 h-40 rounded-full flex items-center justify-center transition-all duration-500 shadow-2xl ${isListening
-                            ? 'bg-gradient-to-br from-red-500 to-pink-600 shadow-[0_0_50px_rgba(239,68,68,0.6)] scale-110'
-                            : 'bg-zinc-900 border-2 border-zinc-800 hover:border-red-500/50 hover:bg-zinc-800'
-                        }`}
-                >
-                    {isListening ? (
-                        <Mic className="w-16 h-16 text-white drop-shadow-md" />
-                    ) : (
-                        <MicOff className="w-16 h-16 text-zinc-600" />
-                    )}
-                </button>
-            </div>
+                {/* AI reply bubble */}
+                {aiText && (phase === "speaking" || phase === "processing") && (
+                    <motion.div
+                        key="ai"
+                        initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
+                        className="max-w-sm w-full bg-blue-500/10 border border-blue-500/20 rounded-2xl px-5 py-3 mb-4"
+                    >
+                        <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mb-1">THOR AI</p>
+                        <p className="text-blue-100 text-sm leading-relaxed">{aiText}</p>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-            {/* Transcription / Status Text */}
-            <h2 className="text-3xl font-bold tracking-tight text-white mb-4 text-center">
-                {isListening ? translate("THOR Guardian AI") : translate("Voice Assistant")}
-            </h2>
-
-            <motion.p
-                key={transcript}
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                className={`text-center max-w-[280px] text-lg font-medium ${isListening ? 'text-zinc-300' : 'text-zinc-600'}`}
-            >
-                {translate(transcript)}
-            </motion.p>
-
-            {/* Visualizer bars */}
-            {isListening && (
-                <div className="flex items-center justify-center gap-1 mt-12 h-16">
-                    {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                        <motion.div
-                            key={i}
-                            animate={{
-                                height: [10, Math.random() * 50 + 20, 10]
-                            }}
-                            transition={{
-                                duration: 0.5,
-                                repeat: Infinity,
-                                ease: "easeInOut",
-                                delay: i * 0.1
-                            }}
+            {/* Waveform (listening only) */}
+            {phase === "listening" && (
+                <div className="flex items-center gap-1 h-10 mt-2">
+                    {[1.0, 0.7, 1.4, 0.9, 1.2, 0.6, 1.3].map((spd, i) => (
+                        <motion.div key={i}
+                            animate={{ height: [4, 22 + i * 3, 4] }}
+                            transition={{ duration: spd, repeat: Infinity, ease: "easeInOut", delay: i * 0.09 }}
                             className="w-1.5 bg-red-500 rounded-full"
                         />
+                    ))}
+                </div>
+            )}
+
+            {/* Manual suggestion pills (always visible when idle/listening) */}
+            {(phase === "listening" || phase === "error") && !liveText && (
+                <div className="mt-8 w-full max-w-sm space-y-2">
+                    <p className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase text-center mb-3">
+                        Or tap a command
+                    </p>
+                    {[
+                        "I would like to go to Paris",
+                        "Open the safety map",
+                        "Plan a trip to London next week",
+                        "I need emergency help",
+                    ].map((s, i) => (
+                        <button key={i} onClick={() => processCommand(s)}
+                            className="w-full text-left px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-sm hover:border-zinc-500 hover:text-white transition-all">
+                            "{s}"
+                        </button>
                     ))}
                 </div>
             )}

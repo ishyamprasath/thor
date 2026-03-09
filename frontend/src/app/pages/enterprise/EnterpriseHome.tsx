@@ -2,18 +2,21 @@ import { useState, useEffect } from "react";
 import { motion } from "motion/react";
 import { useNavigate } from "react-router";
 import { Map, MapPin, Calendar, Plus, ChevronRight, Users, ShieldAlert } from "lucide-react";
-
+import { useAuth } from "../../context/AuthContext";
 import { API_URL } from "../../config/api";
 
 export default function EnterpriseHome() {
     const navigate = useNavigate();
+    const { token } = useAuth();
     const [trips, setTrips] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
     const fetchTrips = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/enterprise/trips`).then(r => r.json());
+            const res = await fetch(`${API_URL}/enterprise/trips`, {
+                headers: { "Authorization": `Bearer ${token}` }
+            }).then(r => r.json());
             setTrips(res.trips || []);
         } catch (e) {
             console.error("Failed to load trips", e);
@@ -22,8 +25,8 @@ export default function EnterpriseHome() {
     };
 
     useEffect(() => {
-        fetchTrips();
-    }, []);
+        if (token) fetchTrips();
+    }, [token]);
 
     return (
         <div className="p-6 space-y-8 max-w-7xl mx-auto">

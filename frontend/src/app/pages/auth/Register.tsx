@@ -47,51 +47,51 @@ export default function Register() {
 
     const handleSubmit = async () => {
         setLoading(true); setError("");
+
+        const payload: Record<string, unknown> = {
+            name,
+            email,
+            password,
+            role,
+        };
+
+        if (bloodGroup || allergies || conditions) {
+            payload.medical_details = {
+                blood_group: bloodGroup || undefined,
+                allergies: allergies || undefined,
+                conditions: conditions || undefined,
+            };
+        }
+
+        if (emergencyName && emergencyPhone) {
+            payload.emergency_contacts = [{
+                name: emergencyName,
+                phone: emergencyPhone,
+                relation: emergencyRelation,
+            }];
+        }
+
         try {
-            const body: any = { name, email, password };
-            if (bloodGroup || allergies || conditions) {
-                body.medical_details = { blood_group: bloodGroup, allergies, conditions };
-            }
-            if (emergencyName && emergencyPhone) {
-                body.emergency_contacts = [{ name: emergencyName, phone: emergencyPhone, relation: emergencyRelation }];
-            }
             const res = await fetch(`${API_URL}/auth/register`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(body),
+                body: JSON.stringify(payload),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Registration failed");
-
-            // --- STRICT PERMISSION ENFORCEMENT ---
-            try {
-                if (!("geolocation" in navigator)) throw new Error("Geolocation not supported by this browser.");
-
-                await new Promise((resolve, reject) => {
-                    navigator.geolocation.getCurrentPosition(
-                        resolve,
-                        () => reject(new Error("Location permission denied. THOR requires GPS access.")),
-                        { enableHighAccuracy: true }
-                    );
-                });
-
-                if ("Notification" in window) {
-                    const perm = await Notification.requestPermission();
-                    if (perm === "denied") {
-                        throw new Error("Notification permission denied. THOR requires Alerts to keep you safe.");
-                    }
-                }
-            } catch (permError: any) {
-                throw new Error(`Permission Denied: ${permError.message}`);
+            if (!res.ok) {
+                setError(data.detail || "Registration failed. Try a different email.");
+                setLoading(false);
+                return;
             }
-            // ------------------------------------
-
             login(data.access_token, data.user);
             setMode(role as "tourist" | "enterprise");
             navigate(role === "enterprise" ? "/enterprise" : "/dashboard");
-        } catch (err: any) { setError(err.message); }
-        finally { setLoading(false); }
+        } catch {
+            setError("Unable to reach server. Check your connection.");
+        }
+        setLoading(false);
     };
+
 
     const next = () => {
         if (step === STEPS.length - 1) { handleSubmit(); return; }

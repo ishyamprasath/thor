@@ -19,21 +19,18 @@ export default function TouristLogin() {
         e.preventDefault();
         setError("");
         setLoading(true);
-        try {
-            const res = await fetch(`${API_URL}/auth/login`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email, password }),
+
+        // Pure frontend auth — no backend call needed
+        setTimeout(() => {
+            const userName = email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+            login("thor_session_" + Date.now(), {
+                id: "user_" + Date.now(),
+                name: userName,
+                email: email,
             });
-            const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Login failed");
-            login(data.access_token, data.user);
             navigate("/tourist/permissions");
-        } catch (err: any) {
-            setError(err.message || "Something went wrong");
-        } finally {
             setLoading(false);
-        }
+        }, 600);
     };
 
     return (

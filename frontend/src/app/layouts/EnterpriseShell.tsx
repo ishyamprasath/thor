@@ -3,7 +3,8 @@ import { Outlet, Navigate, useLocation, NavLink } from "react-router";
 import { motion, AnimatePresence } from "motion/react";
 import {
     LayoutDashboard, Users, Activity, ShieldAlert,
-    Settings, LogOut, Zap, Bell, Search, Menu
+    Settings, LogOut, Zap, Bell, Search, Menu,
+    MessageSquare, Mic, Globe
 } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 import { useTranslation } from "../context/TranslationContext";
@@ -26,7 +27,10 @@ export default function EnterpriseShell() {
         { label: "Active Trips", icon: Users, path: "/enterprise/trips" },
         { label: "Activity Feed", icon: Activity, path: "/enterprise/activity" },
         { label: "Authority / SOS", icon: ShieldAlert, path: "/enterprise/authority" },
-        { label: "Settings", icon: Settings, path: "/settings" } // Reuse global settings
+        { label: "Community", icon: Globe, path: "/community" },
+        { label: "AI Chat", icon: MessageSquare, path: "/chat" },
+        { label: "Voice AI", icon: Mic, path: "/voice" },
+        { label: "Settings", icon: Settings, path: "/enterprise/settings" },
     ];
 
     return (

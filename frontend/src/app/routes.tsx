@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from "react-router";
+import { createBrowserRouter, Navigate, useRouteError, useNavigate } from "react-router";
 import AppShell from "./layouts/AppShell";
 import EnterpriseShell from "./layouts/EnterpriseShell";
 import AuthLayout from "./layouts/AuthLayout";
@@ -28,11 +28,37 @@ import EnterpriseTrips from "./pages/enterprise/Trips";
 import TouristView from "./pages/enterprise/TouristView";
 import Authority from "./pages/enterprise/Authority";
 import ActivityFeed from "./pages/enterprise/ActivityFeed";
+import EnterpriseSettings from "./pages/enterprise/EnterpriseSettings";
+
+function ErrorPage() {
+  const error: any = useRouteError();
+  const navigate = useNavigate();
+  return (
+    <div className="min-h-screen bg-black flex flex-col items-center justify-center text-center p-8">
+      <div className="text-6xl mb-6">⚠️</div>
+      <h1 className="text-3xl font-bold text-white mb-2">
+        {error?.status === 404 ? "Page Not Found" : "Something went wrong"}
+      </h1>
+      <p className="text-zinc-500 mb-8 max-w-sm">
+        {error?.status === 404
+          ? "The page you're looking for doesn't exist or was moved."
+          : error?.message || "An unexpected error occurred."}
+      </p>
+      <button
+        onClick={() => navigate(-1)}
+        className="px-6 py-3 bg-yellow-500 text-black font-bold rounded-xl hover:bg-yellow-400 transition-colors"
+      >
+        ← Go Back
+      </button>
+    </div>
+  );
+}
 
 export const router = createBrowserRouter([
   // Public — Auth layout
   {
     element: <AuthLayout />,
+    errorElement: <ErrorPage />,
     children: [
       { path: "/login", element: <Login /> },
       { path: "/register", element: <Register /> },
@@ -42,8 +68,8 @@ export const router = createBrowserRouter([
   // Protected — App shell
   {
     element: <AppShell />,
+    errorElement: <ErrorPage />,
     children: [
-      // Tourist mode
       { path: "/dashboard", element: <Dashboard /> },
       { path: "/map", element: <SafetyMap /> },
       { path: "/planner", element: <TripPlanner /> },
@@ -62,16 +88,19 @@ export const router = createBrowserRouter([
   // Protected — Enterprise Shell (Desktop Landscape)
   {
     element: <EnterpriseShell />,
+    errorElement: <ErrorPage />,
     children: [
-      { path: "/enterprise", element: <EnterpriseHome /> }, // New "Home" for enterprise
-      { path: "/enterprise/trip/:id", element: <CommandCenter /> }, // CommandCenter now specific to a trip
+      { path: "/enterprise", element: <EnterpriseHome /> },
+      { path: "/enterprise/trip/:id", element: <CommandCenter /> },
       { path: "/enterprise/trips", element: <EnterpriseTrips /> },
       { path: "/enterprise/tourist/:id", element: <TouristView /> },
       { path: "/enterprise/authority", element: <Authority /> },
       { path: "/enterprise/activity", element: <ActivityFeed /> },
+      { path: "/enterprise/settings", element: <EnterpriseSettings /> },
     ]
   },
 
   // Root redirect
   { path: "/", element: <Navigate to="/login" replace /> },
+  { path: "*", element: <ErrorPage /> },
 ]);

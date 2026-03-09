@@ -1,17 +1,16 @@
 import os
 import json
 import urllib.parse
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from typing import Optional
-from routers.auth import get_current_user
 from dotenv import load_dotenv
 import google.generativeai as genai
 import httpx
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-MODEL = "gemini-1.5-flash"
+MODEL = "gemini-3-flash-preview"
 
 router = APIRouter()
 
@@ -34,7 +33,7 @@ class TripRequest(BaseModel):
     traveler_name: Optional[str] = "Traveler"
 
 @router.post("/generate")
-async def generate_trip_plan(req: TripRequest, current_user=Depends(get_current_user)):
+async def generate_trip_plan(req: TripRequest):
     """
     Generates a highly structured JSON mapping of hotels, meals, and route stops for the user's trip.
     """
@@ -81,7 +80,7 @@ async def generate_trip_plan(req: TripRequest, current_user=Depends(get_current_
         raise HTTPException(status_code=500, detail="Failed to generate trip plan via AI.")
 
 @router.get("/guides")
-async def get_local_guides(destination: str, current_user=Depends(get_current_user)):
+async def get_local_guides(destination: str):
     """
     Dynamically fetches REAL local guides / tourism offices using Google Places API TextSearch and Details.
     """
@@ -134,13 +133,38 @@ class ChatRequest(BaseModel):
 async def chat_with_ai(req: ChatRequest):
     """
     Stateful chat endpoint for the Concierge and Global Chatbot.
+    Returns structured JSON with 'reply' and optional 'command'.
     """
-    sys_prompt = ""
+    commands_desc = """
+    You can also execute app commands by returning a JSON object.
+    Available commands:
+    - {"type": "navigate", "path": "/dashboard"} : Go to home/dashboard
+    - {"type": "navigate", "path": "/map"} : Open safety map
+    - {"type": "navigate", "path": "/emergency"} : Open emergency SOS page
+    - {"type": "navigate", "path": "/community"} : Open community forum
+    - {"type": "navigate", "path": "/settings"} : Open app settings
+    - {"type": "auto_plan", "destination": "Paris", "days": 3} : FULLY AUTOMATE A TRIP — use this whenever the user says they want to go somewhere, visit a place, travel to a city, or plan a trip. Extract the exact destination name and a reasonable number of days (default 3 if not specified). This will automatically generate the entire itinerary with hotels, restaurants, and attractions.
+    
+    If the user sounds in danger or asks for help, immediately use the emergency navigate command.
+    IMPORTANT: When any travel intent is detected (Paris, London, beach, mountains, etc.) ALWAYS use auto_plan, not navigate.
+    
+    To use a command, your response MUST be a JSON object like this:
+    {
+      "reply": "I'll take you to the trip planner now.",
+      "command": {"type": "navigate", "path": "/planner"}
+    }
+    If no command is needed, just return:
+    {
+      "reply": "Your message here",
+      "command": null
+    }
+    """
+
     if req.context == "concierge":
         plan_str = json.dumps(req.active_plan) if req.active_plan else "No active plan."
-        sys_prompt = f"You are THOR AI, an elite cultural concierge and local translator. The user is on a trip. Current Plan: {plan_str}. You MUST reply entirely in {req.language}. Keep answers incredibly concise, helpful, and safety-focused."
+        sys_prompt = f"You are THOR AI, an elite cultural concierge. Current Plan: {plan_str}. {commands_desc}. Reply in {req.language}. Keep it concise."
     else:
-        sys_prompt = f"You are THOR AI, the overarching system intelligence for the Guard of Tourism app. You help the user navigate the app (e.g. tell them the Community tab is on the bottom, Plan trip is the big button on Home). You MUST reply entirely in {req.language}. Keep answers concise and helpful."
+        sys_prompt = f"You are THOR AI, the overarching system intelligence for the THOR app. {commands_desc}. Reply in {req.language}. Help users navigate or manage their profile."
 
     # Convert history
     formatted_history = []
@@ -149,10 +173,21 @@ async def chat_with_ai(req: ChatRequest):
         formatted_history.append({"role": role, "parts": [h["content"]]})
 
     try:
-        model = genai.GenerativeModel(MODEL_NAME if 'MODEL_NAME' in globals() else "gemini-3.1-flash-lite-preview", system_instruction=sys_prompt)
+        model = genai.GenerativeModel(MODEL, system_instruction=sys_prompt)
         chat = model.start_chat(history=formatted_history)
         response = chat.send_message(req.message)
-        return {"reply": response.text}
+        
+        # Try to parse as JSON if it looks like it, otherwise wrap it
+        text = response.text.strip()
+        try:
+            if text.startswith("{") and text.endswith("}"):
+                data = json.loads(clean_json(text))
+                return data
+            else:
+                return {"reply": text, "command": None}
+        except:
+            return {"reply": text, "command": None}
+            
     except Exception as e:
         print(f"Chat Error: {str(e)}")
-        return {"reply": "I am experiencing network interference. Please try again."}
+        return {"reply": "I am experiencing network interference. Please try again.", "command": None}

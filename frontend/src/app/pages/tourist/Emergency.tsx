@@ -3,12 +3,14 @@ import { motion } from "motion/react";
 import {
   Siren, Phone, MapPin, Shield, ShieldAlert, Activity,
   Wifi, WifiOff, Battery, BatteryWarning, Heart, Send,
-  AlertTriangle, Radio, CheckCircle, Clock
+  AlertTriangle, Radio, CheckCircle, Clock, CheckCircle2
 } from "lucide-react";
 
+import { useAuth } from "../../context/AuthContext";
 import { API_URL } from "../../config/api";
 
 export default function Emergency() {
+  const { user } = useAuth();
   const [sosActive, setSosActive] = useState(false);
   const [sosHolding, setSosHolding] = useState(false);
   const [sosCountdown, setSosCountdown] = useState(3);
@@ -67,11 +69,20 @@ export default function Emergency() {
   const cancelSOS = () => { setSosActive(false); setSosResult(null); };
 
   const CONTACTS = [
-    { label: "Police", number: "100", color: "var(--thor-info)" },
-    { label: "Ambulance", number: "108", color: "var(--thor-danger)" },
-    { label: "Fire", number: "101", color: "var(--thor-warn)" },
-    { label: "Women Helpline", number: "181", color: "var(--thor-purple)" },
+    { label: "Police", number: "100", color: "var(--thor-info)", isUserContact: false },
+    { label: "Ambulance", number: "108", color: "var(--thor-danger)", isUserContact: false },
+    { label: "Fire", number: "101", color: "var(--thor-warn)", isUserContact: false },
+    { label: "Women Helpline", number: "181", color: "var(--thor-purple)", isUserContact: false },
   ];
+
+  const userContacts = (user?.emergency_contacts || []).map((c: any) => ({
+    label: `${c.name} (${c.relation})`,
+    number: c.phone,
+    color: "var(--thor-brand)", // Or any specific color for user contacts
+    isUserContact: true,
+  }));
+
+  const allContacts = [...userContacts, ...CONTACTS];
 
   return (
     <div className="p-6 space-y-6 max-w-4xl mx-auto">
@@ -156,15 +167,18 @@ export default function Emergency() {
       <div>
         <h2 className="text-subheading mb-3" style={{ color: "var(--thor-text)" }}>Emergency Contacts</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          {CONTACTS.map((c, i) => (
-            <a key={i} href={`tel:${c.number}`} className="card p-4 text-center transition-all" style={{ cursor: "pointer" }}>
-              <Phone className="w-6 h-6 mx-auto mb-2" style={{ color: c.color }} />
-              <p className="text-body font-semibold" style={{ color: "var(--thor-text)" }}>{c.label}</p>
-              <p className="text-heading" style={{ color: c.color }}>{c.number}</p>
+          {allContacts.map((c, i) => (
+            <a key={i} href={`tel:${c.number}`}
+              className="card p-4 text-center transition-all overflow-hidden flex flex-col items-center"
+              style={{ cursor: "pointer", border: c.isUserContact ? "1px solid var(--thor-brand)" : undefined }}>
+              <Phone className="w-6 h-6 mb-2 shrink-0" style={{ color: c.color }} />
+              <p className="text-sm font-semibold w-full truncate" style={{ color: "var(--thor-text)" }} title={c.label}>{c.label}</p>
+              <p className="font-bold mt-1 w-full truncate text-base" style={{ color: c.color }} title={c.number}>{c.number}</p>
             </a>
           ))}
         </div>
       </div>
+
     </div>
   );
 }

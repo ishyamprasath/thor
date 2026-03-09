@@ -31,14 +31,20 @@ export default function Login() {
                 body: JSON.stringify({ email, password }),
             });
             const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || "Login failed");
-
+            if (!res.ok) {
+                setError(data.detail || "Login failed. Please check your credentials.");
+                setLoading(false);
+                return;
+            }
             login(data.access_token, data.user);
-            navigate("/dashboard");
-        } catch (err: any) {
-            setError(err.message);
-        } finally { setLoading(false); }
+            const savedMode = localStorage.getItem("thor-mode");
+            navigate(savedMode === "enterprise" ? "/enterprise" : "/dashboard");
+        } catch {
+            setError("Unable to reach server. Check your connection.");
+        }
+        setLoading(false);
     };
+
 
     return (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>

@@ -1,7 +1,7 @@
 import os
 import uuid
 from datetime import datetime, timezone
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from typing import Optional
 from pydantic import BaseModel
 from database import (
@@ -9,6 +9,7 @@ from database import (
     get_invitations_collection,
     get_tracked_tourists_collection,
 )
+from routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -18,6 +19,7 @@ router = APIRouter()
 class InviteRequest(BaseModel):
     email: str
     trip_id: str
+    name: Optional[str] = None
 
 class TripCreateRequest(BaseModel):
     name: str
@@ -25,6 +27,7 @@ class TripCreateRequest(BaseModel):
     start_date: str
     end_date: str
     tourist_emails: list[str]
+    tourist_names: Optional[list[str]] = None
 
 
 # ─── Helper: strip Mongo's internal _id ────────────────────────────────────────
@@ -201,9 +204,11 @@ async def send_tourist_invite(req: InviteRequest):
     if existing:
         return {"success": True, "message": f"Invitation already pending for {req.email}"}
 
+    tourist_name = req.name or req.email.split("@")[0].title()
     invite = {
         "invite_id": f"inv_{uuid.uuid4().hex[:12]}",
         "email": req.email,
+        "name": tourist_name,
         "trip_id": req.trip_id,
         "enterprise_name": "THOR.",
         "status": "pending",
@@ -216,15 +221,17 @@ async def send_tourist_invite(req: InviteRequest):
 # ─── Trips (Enterprise Projects) ──────────────────────────────────────────────
 
 @router.post("/trips")
-async def create_enterprise_trip(req: TripCreateRequest):
+async def create_enterprise_trip(req: TripCreateRequest, current_user=Depends(get_current_user)):
     """Create a new trip project and dispatch invites to assigned tourists."""
     trips_col = get_enterprise_trips_collection()
     inv_col = get_invitations_collection()
 
     trip_id = f"trip_{uuid.uuid4().hex[:12]}"
+    creator_id = str(current_user["_id"])
 
     trip = {
         "trip_id": trip_id,
+        "creator_id": creator_id,
         "name": req.name,
         "destination": req.destination,
         "start_date": req.start_date,
@@ -235,10 +242,13 @@ async def create_enterprise_trip(req: TripCreateRequest):
     await trips_col.insert_one(trip)
 
     # Dispatch invites
-    for email in req.tourist_emails:
+    names = req.tourist_names or []
+    for i, email in enumerate(req.tourist_emails):
+        tourist_name = names[i] if i < len(names) and names[i] else email.split("@")[0].title()
         invite = {
             "invite_id": f"inv_{uuid.uuid4().hex[:12]}",
             "email": email,
+            "name": tourist_name,
             "trip_id": trip_id,
             "enterprise_name": "THOR.",
             "status": "pending",
@@ -252,11 +262,26 @@ async def create_enterprise_trip(req: TripCreateRequest):
 
 
 @router.get("/trips")
-async def get_enterprise_trips():
-    """List all created trips for the enterprise."""
+async def get_enterprise_trips(current_user=Depends(get_current_user)):
+    """List trips created by the current enterprise user only."""
     col = get_enterprise_trips_collection()
-    trips = await col.find().to_list(length=200)
+    inv_col = get_invitations_collection()
+    creator_id = str(current_user["_id"])
+    # Filter by creator — each user sees only their own trips
+    trips = await col.find({"creator_id": creator_id}).to_list(length=200)
     trips = [_clean(t) for t in trips]
+
+    # Enrich each trip with its assigned tourist emails + acceptance status
+    for trip in trips:
+        tid = trip.get("trip_id", "")
+        invites = await inv_col.find({"trip_id": tid}).to_list(length=200)
+        trip["tourists"] = [
+            {"email": inv.get("email", ""), "name": inv.get("name", ""), "status": inv.get("status", "pending")}
+            for inv in invites
+        ]
+        if "id" not in trip:
+            trip["id"] = tid
+
     return {"trips": trips}
 
 
@@ -300,11 +325,12 @@ async def accept_invitation(invite_id: str):
     existing = await tracking_col.find_one({"email": invite["email"], "trip_id": invite["trip_id"]})
     if not existing:
         count = await tracking_col.count_documents({})
+        tourist_name = invite.get("name") or invite["email"].split("@")[0].title()
         await tracking_col.insert_one({
             "user_id": f"usr_{uuid.uuid4().hex[:10]}",
             "email": invite["email"],
+            "name": tourist_name,
             "trip_id": invite["trip_id"],
-            "name": invite["email"].split("@")[0].title(),
             "country": "Unknown",
             "trip_destination": "Tracking Route",
             "trip_status": "active",

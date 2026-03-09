@@ -1,178 +1,307 @@
 import { useState, useEffect } from "react";
-import { motion } from "motion/react";
+import { motion, AnimatePresence } from "motion/react";
 import {
-    Plus, Mail, MapPin, Calendar, Users, AlertTriangle,
-    Check, Send, Clock, Search, ChevronRight
+    Plus, Mail, MapPin, Calendar, Users, Send, Clock,
+    RefreshCw, ChevronRight, Loader2, AlertCircle, CheckCircle2, Hourglass, X
 } from "lucide-react";
-
+import { useNavigate } from "react-router";
+import { useAuth } from "../../context/AuthContext";
 import { API_URL } from "../../config/api";
 
-interface TripPlan {
+interface TouristSlot {
+    name: string;
+    email: string;
+}
+
+interface TripTourist {
+    email: string;
+    name?: string;
+    status: "pending" | "accepted" | "declined";
+}
+
+interface Trip {
     id: string;
+    trip_id: string;
     name: string;
     destination: string;
-    startDate: string;
-    endDate: string;
-    tourists: { email: string; status: string }[];
-    riskLevel: string;
+    start_date: string;
+    end_date: string;
+    status: string;
+    tourists: TripTourist[];
+    created_at: string;
 }
 
 export default function EnterpriseTrips() {
-    const [trips, setTrips] = useState<TripPlan[]>([]);
+    const { token } = useAuth();
+    const navigate = useNavigate();
+    const [trips, setTrips] = useState<Trip[]>([]);
     const [loading, setLoading] = useState(true);
+    const [creating, setCreating] = useState(false);
+    const [error, setError] = useState("");
     const [showCreate, setShowCreate] = useState(false);
-    const [newTrip, setNewTrip] = useState({ name: "", destination: "", startDate: "", endDate: "", touristEmail: "" });
-    const [addedEmails, setAddedEmails] = useState<string[]>([]);
 
-    const fetchTrips = async () => {
+    // Form state
+    const [tripName, setTripName] = useState("");
+    const [destination, setDestination] = useState("");
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
+    const [tourists, setTourists] = useState<TouristSlot[]>([{ name: "", email: "" }]);
+
+    const authHeaders = {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+    };
+
+    const loadTrips = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_URL}/enterprise/trips`).then(r => r.json());
-            setTrips(res.trips || []);
-        } catch (e) { console.error(e); }
+            const res = await fetch(`${API_URL}/enterprise/trips`, { headers: authHeaders });
+            const data = await res.json();
+            setTrips(data.trips || []);
+        } catch {
+            setError("Failed to load trips.");
+        }
         setLoading(false);
     };
 
-    useEffect(() => { fetchTrips(); }, []);
+    useEffect(() => { loadTrips(); }, []);
 
-    const addEmail = () => {
-        if (newTrip.touristEmail.trim() && newTrip.touristEmail.includes("@")) {
-            setAddedEmails([...addedEmails, newTrip.touristEmail.trim()]);
-            setNewTrip({ ...newTrip, touristEmail: "" });
-        }
+    const addTouristRow = () => setTourists([...tourists, { name: "", email: "" }]);
+    const removeTouristRow = (i: number) => setTourists(tourists.filter((_, idx) => idx !== i));
+    const updateTourist = (i: number, field: "name" | "email", value: string) => {
+        const updated = [...tourists];
+        updated[i][field] = value;
+        setTourists(updated);
     };
 
-    const createTrip = async () => {
-        try {
-            await fetch(`${API_URL}/enterprise/trips`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    name: newTrip.name,
-                    destination: newTrip.destination,
-                    start_date: newTrip.startDate,
-                    end_date: newTrip.endDate,
-                    tourist_emails: addedEmails
-                })
-            });
-            await fetchTrips();
-        } catch (error) {
-            console.error("Failed to create trip", error);
+    const handleCreate = async () => {
+        const validTourists = tourists.filter(t => t.email.trim().includes("@"));
+        if (!tripName || !destination || !startDate || !endDate) {
+            setError("Please fill in all trip details."); return;
+        }
+        if (validTourists.length === 0) {
+            setError("Add at least one tourist with a valid email."); return;
         }
 
-        // Reset form
-        setShowCreate(false);
-        setNewTrip({ name: "", destination: "", startDate: "", endDate: "", touristEmail: "" });
-        setAddedEmails([]);
+        setCreating(true); setError("");
+
+        try {
+            const res = await fetch(`${API_URL}/enterprise/trips`, {
+                method: "POST",
+                headers: authHeaders,
+                body: JSON.stringify({
+                    name: tripName,
+                    destination,
+                    start_date: startDate,
+                    end_date: endDate,
+                    tourist_emails: validTourists.map(t => t.email.trim()),
+                    tourist_names: validTourists.map(t => t.name.trim()),
+                }),
+            });
+            const data = await res.json();
+            if (!res.ok) {
+                setError(data.detail || "Failed to create trip.");
+                setCreating(false);
+                return;
+            }
+
+            // Reset form
+            setTripName(""); setDestination(""); setStartDate(""); setEndDate("");
+            setTourists([{ name: "", email: "" }]);
+            setShowCreate(false);
+            await loadTrips();
+        } catch {
+            setError("Server error. Please try again.");
+        }
+        setCreating(false);
+    };
+
+    const statusIcon = (s: string) => {
+        if (s === "accepted") return <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />;
+        if (s === "declined") return <X className="w-3.5 h-3.5 text-red-400" />;
+        return <Hourglass className="w-3.5 h-3.5 text-yellow-400" />;
+    };
+
+    const statusLabel = (s: string) => {
+        if (s === "accepted") return "Accepted";
+        if (s === "declined") return "Declined";
+        return "Pending";
     };
 
     return (
-        <div className="p-6 space-y-6 max-w-7xl mx-auto">
+        <div className="p-6 space-y-6 max-w-5xl mx-auto">
+            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-heading" style={{ color: "var(--thor-text)" }}>Trip Planner</h1>
-                    <p className="text-body" style={{ color: "var(--thor-text-muted)" }}>Create and manage group travel plans</p>
+                    <h1 className="text-heading" style={{ color: "var(--thor-text)" }}>Trip Plans</h1>
+                    <p className="text-body" style={{ color: "var(--thor-text-muted)" }}>Create trips and invite tourists by name & email</p>
                 </div>
-                <button onClick={() => setShowCreate(!showCreate)} className="btn btn-brand">
-                    <Plus className="w-4 h-4" /> New Trip
-                </button>
+                <div className="flex gap-2">
+                    <button onClick={loadTrips} className="btn btn-ghost" title="Refresh">
+                        <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+                    </button>
+                    <button onClick={() => { setShowCreate(!showCreate); setError(""); }} className="btn btn-brand">
+                        <Plus className="w-4 h-4" /> New Trip
+                    </button>
+                </div>
             </div>
 
-            {/* Create trip form */}
-            {showCreate && (
-                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="card p-6">
-                    <h2 className="text-subheading mb-4" style={{ color: "var(--thor-text)" }}>Create Trip Plan</h2>
-                    <div className="grid md:grid-cols-2 gap-4 mb-4">
-                        <div>
-                            <label className="text-caption block mb-2" style={{ color: "var(--thor-text-secondary)" }}>Trip Name</label>
-                            <input type="text" value={newTrip.name} onChange={(e) => setNewTrip({ ...newTrip, name: e.target.value })} placeholder="e.g. Heritage Tour Group" className="input" />
-                        </div>
-                        <div>
-                            <label className="text-caption block mb-2" style={{ color: "var(--thor-text-secondary)" }}>Destination</label>
-                            <input type="text" value={newTrip.destination} onChange={(e) => setNewTrip({ ...newTrip, destination: e.target.value })} placeholder="City, Country" className="input" />
-                        </div>
-                        <div>
-                            <label className="text-caption block mb-2" style={{ color: "var(--thor-text-secondary)" }}>Start Date</label>
-                            <input type="date" value={newTrip.startDate} onChange={(e) => setNewTrip({ ...newTrip, startDate: e.target.value })} className="input" />
-                        </div>
-                        <div>
-                            <label className="text-caption block mb-2" style={{ color: "var(--thor-text-secondary)" }}>End Date</label>
-                            <input type="date" value={newTrip.endDate} onChange={(e) => setNewTrip({ ...newTrip, endDate: e.target.value })} className="input" />
-                        </div>
-                    </div>
-
-                    {/* Tourist emails */}
-                    <div className="mb-4">
-                        <label className="text-caption block mb-2" style={{ color: "var(--thor-text-secondary)" }}>Add Tourists by Email</label>
-                        <div className="flex gap-2">
-                            <div className="relative flex-1">
-                                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
-                                <input type="email" value={newTrip.touristEmail} onChange={(e) => setNewTrip({ ...newTrip, touristEmail: e.target.value })}
-                                    onKeyDown={(e) => e.key === "Enter" && addEmail()}
-                                    placeholder="tourist@email.com" className="input" style={{ paddingLeft: "2.5rem" }} />
-                            </div>
-                            <button onClick={addEmail} className="btn btn-ghost"><Plus className="w-4 h-4" /></button>
-                        </div>
-                        {addedEmails.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                                {addedEmails.map((e, i) => (
-                                    <span key={i} className="badge badge-info flex items-center gap-1">
-                                        <Mail className="w-3 h-3" />{e}
-                                        <button onClick={() => setAddedEmails(addedEmails.filter((_, j) => j !== i))} className="ml-1" style={{ color: "var(--thor-text-muted)" }}>×</button>
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                        <p className="text-caption mt-2" style={{ color: "var(--thor-text-disabled)" }}>
-                            Tourists will receive an invitation to join this trip
-                        </p>
-                    </div>
-
-                    <div className="flex gap-3 justify-end">
-                        <button onClick={() => setShowCreate(false)} className="btn btn-ghost">Cancel</button>
-                        <button onClick={createTrip} disabled={!newTrip.name || !newTrip.destination || addedEmails.length === 0} className="btn btn-brand">
-                            <Send className="w-4 h-4" /> Create & Invite
-                        </button>
-                    </div>
+            {/* Error */}
+            {error && (
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="flex items-center gap-2 px-4 py-3 rounded-xl"
+                    style={{ background: "var(--thor-danger-muted)", color: "var(--thor-danger)" }}>
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span className="text-caption">{error}</span>
+                    <button onClick={() => setError("")} className="ml-auto"><X className="w-4 h-4" /></button>
                 </motion.div>
             )}
 
-            {/* Trip list */}
-            <div className="space-y-3">
-                {trips.map((trip, i) => (
-                    <motion.div key={trip.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                        className="card p-5">
-                        <div className="flex items-start justify-between mb-3">
+            {/* Create Form */}
+            <AnimatePresence>
+                {showCreate && (
+                    <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                        className="card p-6" style={{ border: "1px solid var(--thor-brand)" }}>
+                        <h2 className="text-subheading mb-5" style={{ color: "var(--thor-text)" }}>Create New Trip</h2>
+                        <div className="grid md:grid-cols-2 gap-4 mb-5">
                             <div>
-                                <h3 className="text-subheading" style={{ color: "var(--thor-text)" }}>{trip.name}</h3>
-                                <div className="flex items-center gap-3 mt-1">
-                                    <span className="text-caption flex items-center gap-1" style={{ color: "var(--thor-text-muted)" }}>
-                                        <MapPin className="w-3 h-3" />{trip.destination}
-                                    </span>
-                                    <span className="text-caption flex items-center gap-1" style={{ color: "var(--thor-text-muted)" }}>
-                                        <Calendar className="w-3 h-3" />{trip.startDate} → {trip.endDate}
-                                    </span>
+                                <label className="text-caption block mb-1.5" style={{ color: "var(--thor-text-secondary)" }}>Trip Name *</label>
+                                <input type="text" value={tripName} onChange={e => setTripName(e.target.value)}
+                                    placeholder="e.g. Heritage Tour Group — Batch 2" className="input" />
+                            </div>
+                            <div>
+                                <label className="text-caption block mb-1.5" style={{ color: "var(--thor-text-secondary)" }}>Destination *</label>
+                                <div className="relative">
+                                    <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
+                                    <input type="text" value={destination} onChange={e => setDestination(e.target.value)}
+                                        placeholder="City, Country" className="input" style={{ paddingLeft: "2.5rem" }} />
                                 </div>
                             </div>
-                            <span className={`badge ${trip.riskLevel === "low" ? "badge-safe" : trip.riskLevel === "medium" ? "badge-warn" : "badge-danger"}`}>
-                                {trip.riskLevel} risk
-                            </span>
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <Users className="w-4 h-4" style={{ color: "var(--thor-text-muted)" }} />
-                            <div className="flex flex-wrap gap-2">
-                                {trip.tourists ? trip.tourists.map((t, j) => (
-                                    <span key={j} className={`badge ${t.status === "accepted" ? "badge-safe" : "badge-warn"}`}>
-                                        {t.status === "accepted" ? <Check className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-                                        {t.email}
-                                    </span>
-                                )) : <span className="text-caption text-zinc-500">No tourists assigned yet</span>}
+                            <div>
+                                <label className="text-caption block mb-1.5" style={{ color: "var(--thor-text-secondary)" }}>Start Date *</label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
+                                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)}
+                                        className="input" style={{ paddingLeft: "2.5rem" }} />
+                                </div>
+                            </div>
+                            <div>
+                                <label className="text-caption block mb-1.5" style={{ color: "var(--thor-text-secondary)" }}>End Date *</label>
+                                <div className="relative">
+                                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
+                                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)}
+                                        className="input" style={{ paddingLeft: "2.5rem" }} />
+                                </div>
                             </div>
                         </div>
+
+                        {/* Tourists */}
+                        <div className="mb-5">
+                            <div className="flex items-center justify-between mb-3">
+                                <label className="text-caption" style={{ color: "var(--thor-text-secondary)" }}>Tourists * (enter name & email — they'll receive an invite)</label>
+                                <button onClick={addTouristRow} className="btn btn-ghost btn-sm">
+                                    <Plus className="w-3.5 h-3.5" /> Add
+                                </button>
+                            </div>
+                            <div className="space-y-3">
+                                {tourists.map((t, i) => (
+                                    <motion.div key={i} initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                        className="flex gap-3">
+                                        <div className="relative flex-1">
+                                            <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
+                                            <input type="text" value={t.name} onChange={e => updateTourist(i, "name", e.target.value)}
+                                                placeholder="Tourist name" className="input" style={{ paddingLeft: "2.5rem" }} />
+                                        </div>
+                                        <div className="relative flex-1">
+                                            <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-disabled)" }} />
+                                            <input type="email" value={t.email} onChange={e => updateTourist(i, "email", e.target.value)}
+                                                placeholder="tourist@email.com" className="input" style={{ paddingLeft: "2.5rem" }} />
+                                        </div>
+                                        {tourists.length > 1 && (
+                                            <button onClick={() => removeTouristRow(i)} className="btn btn-ghost btn-sm p-2">
+                                                <X className="w-4 h-4" />
+                                            </button>
+                                        )}
+                                    </motion.div>
+                                ))}
+                            </div>
+                            <p className="text-micro mt-2" style={{ color: "var(--thor-text-disabled)" }}>
+                                Each tourist will receive a tracking authorization request in their THOR app dashboard.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3 justify-end">
+                            <button onClick={() => { setShowCreate(false); setError(""); }} className="btn btn-ghost">Cancel</button>
+                            <button onClick={handleCreate} disabled={creating} className="btn btn-brand">
+                                {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                                {creating ? "Sending invites..." : "Create & Invite"}
+                            </button>
+                        </div>
                     </motion.div>
-                ))}
-            </div>
+                )}
+            </AnimatePresence>
+
+            {/* Trips List */}
+            {loading && trips.length === 0 ? (
+                <div className="text-center py-20">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-3" style={{ color: "var(--thor-brand)" }} />
+                    <p className="text-body" style={{ color: "var(--thor-text-muted)" }}>Loading trips...</p>
+                </div>
+            ) : trips.length === 0 ? (
+                <div className="text-center py-20 card">
+                    <MapPin className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--thor-text-disabled)" }} />
+                    <p className="text-subheading mb-1" style={{ color: "var(--thor-text)" }}>No trips yet</p>
+                    <p className="text-body" style={{ color: "var(--thor-text-muted)" }}>Create your first trip plan and invite tourists</p>
+                </div>
+            ) : (
+                <div className="space-y-4">
+                    {trips.map((trip, i) => {
+                        const tid = trip.trip_id || trip.id;
+                        const accepted = (trip.tourists || []).filter(t => t.status === "accepted").length;
+                        const pending = (trip.tourists || []).filter(t => t.status === "pending").length;
+                        return (
+                            <motion.div key={tid} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
+                                className="card p-5">
+                                <div className="flex items-start justify-between mb-4">
+                                    <div>
+                                        <h3 className="text-subheading" style={{ color: "var(--thor-text)" }}>{trip.name}</h3>
+                                        <div className="flex flex-wrap items-center gap-3 mt-1">
+                                            <span className="text-caption flex items-center gap-1" style={{ color: "var(--thor-text-muted)" }}>
+                                                <MapPin className="w-3 h-3" />{trip.destination}
+                                            </span>
+                                            <span className="text-caption flex items-center gap-1" style={{ color: "var(--thor-text-muted)" }}>
+                                                <Calendar className="w-3 h-3" />{trip.start_date} → {trip.end_date}
+                                            </span>
+                                            <span className="badge badge-safe">{accepted} accepted</span>
+                                            {pending > 0 && <span className="badge badge-warn">{pending} pending</span>}
+                                        </div>
+                                    </div>
+                                    <button onClick={() => navigate(`/enterprise/trip/${tid}`)}
+                                        className="btn btn-ghost btn-sm flex items-center gap-1">
+                                        Monitor <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                {trip.tourists && trip.tourists.length > 0 && (
+                                    <div className="flex flex-wrap gap-2">
+                                        {trip.tourists.map((t, j) => (
+                                            <span key={j} className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-caption"
+                                                style={{
+                                                    background: t.status === "accepted" ? "var(--thor-safe-muted)" : t.status === "declined" ? "var(--thor-danger-muted)" : "var(--thor-surface-2)",
+                                                    color: t.status === "accepted" ? "var(--thor-safe)" : t.status === "declined" ? "var(--thor-danger)" : "var(--thor-text-muted)",
+                                                }}>
+                                                {statusIcon(t.status)}
+                                                {t.name ? `${t.name} (${t.email})` : t.email}
+                                                <span className="text-micro opacity-60">— {statusLabel(t.status)}</span>
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            )}
         </div>
     );
 }

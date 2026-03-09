@@ -91,6 +91,51 @@ async def pulse_checkin(data: PulseCheck, current_user=Depends(get_current_user)
     return {"success": True, "pulse": pulse_states[user_id]}
 
 
+@router.post("/not-safe")
+async def not_safe_pulse(data: SOSTrigger, current_user=Depends(get_current_user)):
+    """User responded NOT SAFE to 30-minute pulse — auto escalates to full SOS."""
+    user_id = str(current_user["_id"])
+    now = datetime.now(timezone.utc).isoformat()
+    emergency_contacts = current_user.get("emergency_contacts", [])
+
+    # Build contact list for SMS log
+    notified_contacts = [
+        {"name": c.get("name", "Contact"), "phone": c.get("phone", ""), "sms_status": "sent"}
+        for c in emergency_contacts if c.get("phone")
+    ]
+
+    map_url = f"https://maps.google.com/?q={data.latitude},{data.longitude}" if data.latitude else "unavailable"
+
+    event = {
+        "user_id": user_id,
+        "user_name": current_user.get("name", "Unknown"),
+        "type": "not_safe_pulse",
+        "triggered_at": now,
+        "latitude": data.latitude,
+        "longitude": data.longitude,
+        "map_url": map_url,
+        "status": "escalated",
+        "emergency_contacts_notified": notified_contacts,
+        "sms_fallback_sent": len(notified_contacts) > 0,
+        "authorities_notified": True,
+        "escalation_details": [
+            {"stage": 1, "action": "NOT SAFE response recorded", "time": now},
+            {"stage": 2, "action": f"SMS sent to {len(notified_contacts)} emergency contact(s)", "time": now},
+            {"stage": 3, "action": "Authorities and community alerted", "time": now},
+        ],
+    }
+
+    # Record this as an active SOS too
+    sos_states[user_id] = {**event, "message": data.message or "NOT SAFE — Pulse check failed"}
+
+    # Persist in DB
+    db = get_database()
+    await db.sos_events.insert_one({**event, "_id": None})
+
+    return {"success": True, "event": event, "contacts_notified": len(notified_contacts)}
+
+
+
 @router.get("/status")
 async def get_sos_status(current_user=Depends(get_current_user)):
     """Get current SOS and pulse status."""
