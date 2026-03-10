@@ -19,13 +19,14 @@ import { API_URL } from "../../config/api";
 type Phase = "permission" | "listening" | "processing" | "speaking" | "error";
 
 const SILENCE_MS = 1200; // ms of silence before auto-processing
-const GEMINI_MODEL = "gemini-3-flash-preview";  // for display only; backend uses this model
+const GEMINI_MODEL = "gemini-3.1-flash-lite-preview";  // for display only; backend uses this model
 
 export default function VoiceAI() {
     const { token } = useAuth();
     const navigate = useNavigate();
 
     const [phase, setPhase] = useState<Phase>("permission");
+    const [started, setStarted] = useState(false); // require tap to unlock audio
     const [liveText, setLiveText] = useState("");         // what the user is saying right now (interim)
     const [aiText, setAiText] = useState("");         // what the AI replied
     const [statusMsg, setStatusMsg] = useState("Tap Allow to activate THOR Voice");
@@ -36,13 +37,38 @@ export default function VoiceAI() {
     const recRef = useRef<any>(null);
     const activeRef = useRef(false); // is recognition currently running?
 
+    useEffect(() => {
+        if ("speechSynthesis" in window) {
+            window.speechSynthesis.getVoices();
+            window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+        }
+    }, []);
+
     // ─── TTS helper ─────────────────────────────────────────────────────────
     const speak = useCallback((text: string): Promise<void> => {
         return new Promise((resolve) => {
             if (!("speechSynthesis" in window)) { resolve(); return; }
             window.speechSynthesis.cancel();
-            const u = new SpeechSynthesisUtterance(text);
-            u.lang = "en-US"; u.rate = 1.08;
+
+            const cleanText = text.replace(/[*#_]/g, '');
+            const u = new SpeechSynthesisUtterance(cleanText);
+
+            const voices = window.speechSynthesis.getVoices();
+            const femaleVoice = voices.find(v =>
+                v.name.includes("Female") ||
+                v.name.includes("Samantha") ||
+                v.name.includes("Zira") ||
+                v.name.includes("Victoria") ||
+                v.name.includes("Google UK English Female")
+            );
+
+            if (femaleVoice) {
+                u.voice = femaleVoice;
+            }
+            u.lang = "en-US";
+            u.pitch = 1.1;
+            u.rate = 1.0;
+
             u.onend = () => resolve();
             u.onerror = () => resolve();
             window.speechSynthesis.speak(u);
@@ -120,7 +146,7 @@ export default function VoiceAI() {
             const res = await fetch(`${API_URL}/trip/chat`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-                body: JSON.stringify({ message: text, language: "English", context: "global" }),
+                body: JSON.stringify({ message: text, language: "English", context: "voice" }),
             });
             const data = await res.json();
             const reply = data.reply || "Got it.";
@@ -231,7 +257,16 @@ export default function VoiceAI() {
 
         recRef.current = rec;
 
-        // Auto-request permission and start straight away
+        // DO NOT start automatically. Wait for user tap.
+        return () => {
+            if (silenceTimer.current) clearTimeout(silenceTimer.current);
+            rec.stop();
+        };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    const handleStart = () => {
+        setStarted(true);
         navigator.mediaDevices?.getUserMedia({ audio: true })
             .then(() => {
                 setStatusMsg("Listening...");
@@ -241,13 +276,7 @@ export default function VoiceAI() {
                 setPhase("error");
                 setStatusMsg("Microphone permission denied.");
             });
-
-        return () => {
-            if (silenceTimer.current) clearTimeout(silenceTimer.current);
-            rec.stop();
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, []);
+    };
 
     // Update onend when processCommand changes (to avoid stale closures)
     useEffect(() => {
@@ -277,6 +306,22 @@ export default function VoiceAI() {
 
     return (
         <div className="w-full h-full min-h-[80vh] flex flex-col items-center justify-center relative p-6 bg-black overflow-hidden">
+
+            {!started && (
+                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center">
+                    <button
+                        onClick={handleStart}
+                        className="w-48 h-48 rounded-full bg-blue-500 hover:bg-blue-600 shadow-[0_0_50px_rgba(59,130,246,0.5)] flex flex-col items-center justify-center text-white transition-all transform hover:scale-105 active:scale-95 duration-200"
+                    >
+                        <Mic className="w-12 h-12 mb-3" />
+                        <span className="font-bold text-lg">Tap to Start</span>
+                        <span className="text-xs text-blue-200 font-medium">THOR Voice Agent</span>
+                    </button>
+                    <p className="mt-8 text-sm text-zinc-500 max-w-xs text-center">
+                        Interaction requires manual activation to enable live AI speech synthesis.
+                    </p>
+                </div>
+            )}
 
             {/* Status badge */}
             <div className={`absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest transition-all duration-500 ${phase === "listening" ? "bg-red-500/10 border-red-500/30 text-red-400" :

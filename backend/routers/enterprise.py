@@ -340,7 +340,26 @@ async def accept_invitation(invite_id: str):
             "sos_active": False,
             "current_lat": 11.0168 + (count * 0.005),
             "current_long": 76.9558 + (count * 0.005),
-            "last_pulse_check_ack": datetime.now(timezone.utc).isoformat()
+            "last_pulse_check_ack": datetime.now(timezone.utc).isoformat(),
+            "simulated_alert": False
         })
 
     return {"success": True, "message": "Tracking authorized."}
+
+# ─── Geofencing Simulation ────────────────────────────────────────────────────
+
+@router.post("/simulate-alert/{email}")
+async def simulate_geofence_alert(email: str, current_user=Depends(get_current_user)):
+    """Enterprise triggers a massive simulated safety alert directly to the Tourist's email / device."""
+    col = get_tracked_tourists_collection()
+    
+    # We find all matching active instances for this email and flag them
+    result = await col.update_many(
+        {"email": email},
+        {"$set": {"simulated_alert": True}}
+    )
+    
+    if result.modified_count > 0:
+        return {"success": True, "message": f"Alert broadcast queued for {email}."}
+    return {"success": False, "error": f"No active tracking sessions found for {email}."}
+

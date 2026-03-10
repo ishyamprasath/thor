@@ -2,8 +2,10 @@ import json
 import math
 import os
 import random
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Depends
 from typing import Optional
+from database import get_tracked_tourists_collection
+from routers.auth import get_current_user
 
 router = APIRouter()
 
@@ -194,6 +196,26 @@ async def geofence_check(data: dict):
         "alerts": alerts,
         "checked_at": {"lat": lat, "lng": lng},
     }
+
+@router.get("/my-alert")
+async def check_simulated_alerts(current_user=Depends(get_current_user)):
+    """Tourist device constantly polls this to see if Enterprise triggered an alert."""
+    email = current_user.get("email")
+    if not email:
+        return {"alert": False}
+        
+    col = get_tracked_tourists_collection()
+    tourist = await col.find_one({"email": email, "simulated_alert": True})
+    
+    if tourist:
+        # Immediately acknowledge and clear the flag so it only triggers once per simulation
+        await col.update_many(
+            {"email": email},
+            {"$set": {"simulated_alert": False}}
+        )
+        return {"alert": True}
+        
+    return {"alert": False}
 
 
 @router.get("/nearest")

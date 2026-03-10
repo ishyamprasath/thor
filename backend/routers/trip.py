@@ -10,7 +10,7 @@ import httpx
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
-MODEL = "gemini-3-flash-preview"
+MODEL = "gemini-3.1-flash-lite-preview"
 
 router = APIRouter()
 
@@ -163,6 +163,10 @@ async def chat_with_ai(req: ChatRequest):
     if req.context == "concierge":
         plan_str = json.dumps(req.active_plan) if req.active_plan else "No active plan."
         sys_prompt = f"You are THOR AI, an elite cultural concierge. Current Plan: {plan_str}. {commands_desc}. Reply in {req.language}. Keep it concise."
+    elif req.context == "voice":
+        sys_prompt = f"You are THOR AI, a live vocal traveling companion. {commands_desc}. You are speaking aloud to the user right now via voice audio. Reply in {req.language}. Speak conversationally, warmly, and naturally. DO NOT use markdown, emojis, asterisks, or text formatting. Keep your responses brief and natural, like a real human conversation."
+    elif req.context == "enterprise":
+        sys_prompt = f"You are THOR Enterprise Command AI. {commands_desc}. Reply in {req.language}. Keep your tone formal, analytical, and authoritative. Do not use emojis or markdown."
     else:
         sys_prompt = f"You are THOR AI, the overarching system intelligence for the THOR app. {commands_desc}. Reply in {req.language}. Help users navigate or manage their profile."
 

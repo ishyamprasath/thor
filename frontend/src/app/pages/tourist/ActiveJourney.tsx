@@ -3,14 +3,18 @@ import { motion, AnimatePresence } from "motion/react";
 import { useNavigate } from "react-router";
 import {
     MapPin, Navigation, Shield, Heart, Hotel, Coffee, Sun, Moon, Info, ShieldAlert,
-    ExternalLink, X, Users, Star, Phone, Search, ChevronDown, ChevronUp, Route
+    ExternalLink, X, Users, Star, Phone, Search, ChevronDown, ChevronUp, Route,
+    Sparkles, CloudLightning, AlertTriangle
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, DirectionsRenderer } from "@react-google-maps/api";
 import { useTranslation } from "../../context/TranslationContext";
 import { useAuth } from "../../context/AuthContext";
 import { API_URL } from "../../config/api";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GOOGLE_MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
+const GOOGLE_MAPS_KEY = (import.meta as any).env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
+const GEMINI_API_KEY = "AIzaSyA9l7RFaB4h4BtowJuZL2dbnqvDcUb5OGY";
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const LIBS: ("places")[] = ["places"];
 
 const darkMapStyle = [
@@ -65,6 +69,10 @@ export default function ActiveJourney() {
     const [guides, setGuides] = useState<any[]>([]);
     const [loadingGuides, setLoadingGuides] = useState(true);
     const [showDirections, setShowDirections] = useState(true);
+
+    // AI Prediction
+    const [aiPrediction, setAiPrediction] = useState<any>(null);
+    const [loadingAi, setLoadingAi] = useState(false);
 
     // Safety Pulse
     const [showPulse, setShowPulse] = useState(false);
@@ -196,6 +204,49 @@ export default function ActiveJourney() {
 
     const orderedStops = buildOrderedStops();
 
+    // AI Prediction Effect
+    useEffect(() => {
+        if (!plan || orderedStops.length === 0 || aiPrediction || loadingAi) return;
+
+        const fetchPrediction = async () => {
+            setLoadingAi(true);
+            try {
+                const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
+                const stopNames = orderedStops.map(s => s.label).join(", ");
+                const prompt = `You are an AI Travel Safety Assistant. The user is currently on an active journey to ${plan.destination}.
+Their upcoming stops include: ${stopNames}.
+Generate a real-time mock prediction for this route regarding weather, traffic, and local news.
+Return ONLY a strictly valid JSON object with the following structure:
+{
+  "status": "Proceed" | "Delay" | "Reroute",
+  "weather": "Short weather description (e.g., Heavy rain expected in 1 hour)",
+  "traffic": "Short traffic update (e.g., Accident on main highway, 20 min delay)",
+  "news": "Short local news/safety alert (e.g., Local festival might crowd the area)",
+  "recommendation": "One sentence definitive advice"
+}`;
+                const result = await model.generateContent(prompt);
+                const text = result.response.text();
+
+                // clean json
+                let jsonStr = text.trim();
+                if (jsonStr.startsWith("\`\`\`")) {
+                    const parts = jsonStr.split("\`\`\`");
+                    jsonStr = parts[1] || jsonStr;
+                    if (jsonStr.startsWith("json")) jsonStr = jsonStr.slice(4);
+                }
+                if (jsonStr.endsWith("\`\`\`")) jsonStr = jsonStr.slice(0, -3);
+
+                setAiPrediction(JSON.parse(jsonStr.trim()));
+            } catch (e) {
+                console.error("AI Prediction Error:", e);
+            } finally {
+                setLoadingAi(false);
+            }
+        };
+
+        fetchPrediction();
+    }, [plan, orderedStops, aiPrediction, loadingAi]);
+
     const handlePulseConfirm = () => {
         setShowPulse(false);
         const now = Date.now();
@@ -318,6 +369,57 @@ export default function ActiveJourney() {
 
             {/* Scrollable Content */}
             <div className="flex-1 overflow-y-auto">
+
+                {/* ── AI Real-Time Prediction Panel ── */}
+                <div className="border-b border-zinc-900 px-4 py-5 bg-zinc-950">
+                    <div className="flex items-center gap-2 mb-3">
+                        <Sparkles className="w-5 h-5 text-yellow-500" />
+                        <h3 className="text-sm font-bold text-white uppercase tracking-wider">{translate("AI Live Insights")}</h3>
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">gemini-3.1-flash-lite</span>
+                    </div>
+
+                    {loadingAi ? (
+                        <div className="flex items-center gap-3 p-4 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse">
+                            <div className="w-8 h-8 rounded-full border-2 border-yellow-500 border-t-transparent animate-spin shrink-0" />
+                            <p className="text-xs text-zinc-400 font-medium">{translate("Analyzing live satellite & traffic data...")}</p>
+                        </div>
+                    ) : aiPrediction ? (
+                        <div className={`p-4 rounded-2xl border ${aiPrediction.status === "Proceed" ? "bg-green-500/10 border-green-500/30" :
+                            aiPrediction.status === "Delay" ? "bg-orange-500/10 border-orange-500/30" :
+                                "bg-red-500/10 border-red-500/30"
+                            }`}>
+                            <div className="flex items-center justify-between mb-3">
+                                <span className={`text-lg font-bold ${aiPrediction.status === "Proceed" ? "text-green-500" :
+                                    aiPrediction.status === "Delay" ? "text-orange-500" :
+                                        "text-red-500"
+                                    }`}>
+                                    {aiPrediction.status.toUpperCase()}
+                                </span>
+                            </div>
+
+                            <div className="space-y-2 mb-3">
+                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                    <CloudLightning className="w-4 h-4 text-blue-400 shrink-0" />
+                                    <span><strong className="text-white">Weather:</strong> {aiPrediction.weather}</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                    <Route className="w-4 h-4 text-orange-400 shrink-0" />
+                                    <span><strong className="text-white">Traffic:</strong> {aiPrediction.traffic}</span>
+                                </div>
+                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                    <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
+                                    <span><strong className="text-white">Alerts:</strong> {aiPrediction.news}</span>
+                                </div>
+                            </div>
+
+                            <div className="pt-3 border-t border-black/20">
+                                <p className="text-xs font-semibold text-white leading-relaxed">
+                                    {aiPrediction.recommendation}
+                                </p>
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
 
                 {/* ── Ordered Directions Panel ── */}
                 <div className="border-b border-zinc-900">

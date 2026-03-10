@@ -190,7 +190,7 @@ export default function GlobalChatbot() {
                     </div>
                     <div>
                         <h1 className="text-base font-black text-white tracking-tight">{translate("THOR AI")}</h1>
-                        <p className="text-[10px] text-zinc-500">gemini-3-flash-preview · {translate("Fully Automated")}</p>
+                        <p className="text-[10px] text-zinc-500">gemini-3.1-flash-lite-preview · {translate("Fully Automated")}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-2.5 py-1 rounded-full">
@@ -211,8 +211,8 @@ export default function GlobalChatbot() {
 
                             {/* Avatar */}
                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${msg.role === "ai"
-                                    ? "bg-gradient-to-br from-blue-600 to-cyan-500 text-white"
-                                    : "bg-zinc-800 border border-zinc-700 text-zinc-300"
+                                ? "bg-gradient-to-br from-blue-600 to-cyan-500 text-white"
+                                : "bg-zinc-800 border border-zinc-700 text-zinc-300"
                                 }`}>
                                 {msg.role === "ai" ? <Zap className="w-4 h-4" fill="currentColor" /> : <User className="w-4 h-4" />}
                             </div>
@@ -220,10 +220,10 @@ export default function GlobalChatbot() {
                             {/* Bubble */}
                             <div className={`max-w-[78%] ${msg.role === "user" ? "items-end" : "items-start"} flex flex-col`}>
                                 <div className={`rounded-2xl px-4 py-3 shadow-lg ${msg.role === "user"
-                                        ? "bg-blue-600 text-white rounded-br-sm"
-                                        : msg.isExecuting
-                                            ? "bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 rounded-bl-sm"
-                                            : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-bl-sm"
+                                    ? "bg-blue-600 text-white rounded-br-sm"
+                                    : msg.isExecuting
+                                        ? "bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 rounded-bl-sm"
+                                        : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-bl-sm"
                                     }`}>
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                     {msg.command && <CommandChip cmd={msg.command} />}

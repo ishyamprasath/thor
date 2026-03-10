@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import {
     Users, Wifi, WifiOff, Shield, ShieldAlert, AlertTriangle,
     Battery, BatteryWarning, Siren, Search, Eye, RefreshCw,
-    Activity, UserPlus, Send, X, Loader2
+    Activity, UserPlus, Send, X, Loader2, MapPin as MapPinIcon
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { useAuth } from "../../context/AuthContext";
@@ -35,6 +35,8 @@ export default function CommandCenter() {
     const [inviteName, setInviteName] = useState("");
     const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [inviteError, setInviteError] = useState("");
+
+    const [simulationToast, setSimulationToast] = useState<{ show: boolean, name: string }>({ show: false, name: "" });
 
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
@@ -114,6 +116,25 @@ export default function CommandCenter() {
         } catch {
             setInviteStatus("error");
             setInviteError("Server error. Check your connection.");
+        }
+    };
+
+    const handleSimulateGeofence = async (e: React.MouseEvent, t: any) => {
+        e.stopPropagation(); // prevent navigation to detail page
+
+        try {
+            await fetch(`${API_URL}/enterprise/simulate-alert/${t.email}`, {
+                method: "POST",
+                headers: authHeaders
+            });
+            // Show success toast for Enterprise AND native alert just in case
+            alert(`🚨 ALERT TRIGGERED: Simulated No-Go Zone Alert sent for tourist ${t.name}!`);
+
+            setSimulationToast({ show: true, name: t.name });
+            setTimeout(() => setSimulationToast({ show: false, name: "" }), 4000);
+        } catch (error) {
+            console.error("Failed to simulate alert:", error);
+            alert("Failed to send alert to tourist device directly.");
         }
     };
 
@@ -288,7 +309,7 @@ export default function CommandCenter() {
                         <table className="w-full">
                             <thead>
                                 <tr style={{ borderBottom: "1px solid var(--thor-border)" }}>
-                                    {["Name", "Email", "Destination", "Status", "Battery", "Network", ""].map(h => (
+                                    {["Name", "Email", "Destination", "Status", "Battery", "Network", "Simulate Alert", ""].map(h => (
                                         <th key={h} className="text-left text-micro py-3 px-3" style={{ color: "var(--thor-text-muted)" }}>{h}</th>
                                     ))}
                                 </tr>
@@ -324,6 +345,14 @@ export default function CommandCenter() {
                                                 {t.network_status === "online" ? <Wifi className="w-3.5 h-3.5" /> : <WifiOff className="w-3.5 h-3.5" />}
                                                 {t.network_status}
                                             </span>
+                                        </td>
+                                        <td className="py-3 px-3">
+                                            <button
+                                                onClick={(e) => handleSimulateGeofence(e, t)}
+                                                className="btn btn-sm bg-red-500/10 text-red-500 border border-red-500/30 hover:bg-red-500 hover:text-white transition-colors"
+                                            >
+                                                <MapPinIcon className="w-3 h-3" /> Simulate No-Go
+                                            </button>
                                         </td>
                                         <td className="py-3 px-3">
                                             <button className="btn btn-ghost btn-sm"><Eye className="w-4 h-4" /></button>

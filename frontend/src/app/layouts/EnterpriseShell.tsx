@@ -27,9 +27,9 @@ export default function EnterpriseShell() {
         { label: "Active Trips", icon: Users, path: "/enterprise/trips" },
         { label: "Activity Feed", icon: Activity, path: "/enterprise/activity" },
         { label: "Authority / SOS", icon: ShieldAlert, path: "/enterprise/authority" },
-        { label: "Community", icon: Globe, path: "/community" },
-        { label: "AI Chat", icon: MessageSquare, path: "/chat" },
-        { label: "Voice AI", icon: Mic, path: "/voice" },
+        { label: "Community", icon: Globe, path: "/enterprise/community" },
+        { label: "AI Chat", icon: MessageSquare, path: "/enterprise/chat" },
+        { label: "Voice AI", icon: Mic, path: "/enterprise/voice" },
         { label: "Settings", icon: Settings, path: "/enterprise/settings" },
     ];
 

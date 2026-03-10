@@ -271,7 +271,7 @@ Generate multiple REAL, SPECIFIC options for each category. Return ONLY valid JS
 Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destination}. No other text.`;
 
         try {
-            const model = genAI.getGenerativeModel({ model: "gemini-3-flash-preview" });
+            const model = genAI.getGenerativeModel({ model: "gemini-3.1-flash-lite-preview" });
             const result = await model.generateContent(prompt);
             const text = result.response.text();
             const jsonStr = cleanJSON(text);

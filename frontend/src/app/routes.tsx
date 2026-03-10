@@ -29,6 +29,9 @@ import TouristView from "./pages/enterprise/TouristView";
 import Authority from "./pages/enterprise/Authority";
 import ActivityFeed from "./pages/enterprise/ActivityFeed";
 import EnterpriseSettings from "./pages/enterprise/EnterpriseSettings";
+import EnterpriseChat from "./pages/enterprise/EnterpriseChat";
+import EnterpriseVoice from "./pages/enterprise/EnterpriseVoice";
+import EnterpriseCommunity from "./pages/enterprise/EnterpriseCommunity";
 
 function ErrorPage() {
   const error: any = useRouteError();
@@ -96,6 +99,9 @@ export const router = createBrowserRouter([
       { path: "/enterprise/tourist/:id", element: <TouristView /> },
       { path: "/enterprise/authority", element: <Authority /> },
       { path: "/enterprise/activity", element: <ActivityFeed /> },
+      { path: "/enterprise/chat", element: <EnterpriseChat /> },
+      { path: "/enterprise/voice", element: <EnterpriseVoice /> },
+      { path: "/enterprise/community", element: <EnterpriseCommunity /> },
       { path: "/enterprise/settings", element: <EnterpriseSettings /> },
     ]
   },
