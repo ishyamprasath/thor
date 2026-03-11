@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { API_URL } from "../../config/api";
 
 const MAPS_KEY = (import.meta as any).env?.VITE_PUBLIC_GOOGLE_MAPS_API_KEY ?? "";
@@ -20,7 +21,16 @@ const darkMapStyle = [
     { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
 ];
 
+const lightMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+];
+
 export default function CommandCenter() {
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { tripId } = useParams();
     const { token } = useAuth();
@@ -35,6 +45,8 @@ export default function CommandCenter() {
     const [inviteName, setInviteName] = useState("");
     const [inviteStatus, setInviteStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
     const [inviteError, setInviteError] = useState("");
+    
+    const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
     const [simulationToast, setSimulationToast] = useState<{ show: boolean, name: string }>({ show: false, name: "" });
 
@@ -224,7 +236,7 @@ export default function CommandCenter() {
                     {isLoaded ? (
                         <GoogleMap mapContainerStyle={{ width: "100%", height: "100%" }}
                             center={mapCenter} zoom={tourists.length > 0 ? 13 : 12}
-                            options={{ styles: darkMapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}>
+                            options={{ styles: mapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}>
                             {filteredTourists.map((t, i) => (
                                 <Marker key={i} position={{ lat: t.current_lat, lng: t.current_long }}
                                     onClick={() => navigate(`/enterprise/tourist/${t.user_id}`)}

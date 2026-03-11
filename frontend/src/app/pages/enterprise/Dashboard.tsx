@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker, Circle } from "@react-google-maps/api";
 import { useNavigate } from "react-router";
+import { useTheme } from "../../context/ThemeContext";
 
 const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
 import { API_URL } from "../../config/api";
@@ -21,6 +22,15 @@ const darkMapStyle = [
   { featureType: "poi", elementType: "geometry", stylers: [{ color: "#283d6a" }] },
 ];
 
+const lightMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+  { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+  { featureType: "poi", elementType: "geometry", stylers: [{ color: "#f1f5f9" }] },
+];
+
 const STATUS_COLORS: Record<string, string> = {
   safe: "#22c55e", warning: "#eab308", danger: "#ef4444",
 };
@@ -32,6 +42,7 @@ const SEVERITY_STYLES: Record<string, { bg: string; text: string; border: string
 };
 
 export default function EnterpriseDashboard() {
+  const { theme } = useTheme();
   const navigate = useNavigate();
   const [stats, setStats] = useState<any>(null);
   const [tourists, setTourists] = useState<any[]>([]);
@@ -41,6 +52,8 @@ export default function EnterpriseDashboard() {
   const [filterSafety, setFilterSafety] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const mapRef = useRef<google.maps.Map | null>(null);
+  
+  const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
   const { isLoaded } = useJsApiLoader({ googleMapsApiKey: MAPS_KEY, libraries: LIBS });
 
@@ -121,13 +134,13 @@ export default function EnterpriseDashboard() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           {/* MAP — 2 cols */}
-          <div className="lg:col-span-2 bg-slate-900 border border-white/10 rounded-2xl overflow-hidden" style={{ height: 500 }}>
+          <div className={`lg:col-span-2 border rounded-2xl overflow-hidden ${theme === 'dark' ? 'bg-slate-900 border-white/10' : 'bg-white border-gray-200'}`} style={{ height: 500 }}>
             {isLoaded ? (
               <GoogleMap
                 mapContainerStyle={{ width: "100%", height: "100%" }}
                 center={mapCenter} zoom={12}
                 onLoad={(map) => { mapRef.current = map; }}
-                options={{ styles: darkMapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: true }}>
+                options={{ styles: mapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: true }}>
                 {/* Tourist markers */}
                 {filteredTourists.map((t, i) => (
                   <Marker key={i} position={{ lat: t.current_lat, lng: t.current_long }}

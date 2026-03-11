@@ -5,6 +5,7 @@ import {
   Clock, Users, Building2, Hospital, Landmark, Search
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker, Circle } from "@react-google-maps/api";
+import { useTheme } from "../../context/ThemeContext";
 
 import { API_URL } from "../../config/api";
 const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -16,13 +17,23 @@ const darkMapStyle = [
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
 ];
 
+const lightMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+];
+
 const CAT_ICONS: Record<string, any> = { police_station: Building2, hospital: Hospital, embassy: Landmark, verified_shelter: Shield };
 
 export default function Authority() {
+  const { theme } = useTheme();
   const [zones, setZones] = useState<any[]>([]);
   const [hazards, setHazards] = useState<any[]>([]);
   const [sosTourists, setSosTourists] = useState<any[]>([]);
   const [categoryFilter, setCategoryFilter] = useState<string | null>(null);
+  
+  const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -92,7 +103,7 @@ export default function Authority() {
           {isLoaded ? (
             <GoogleMap mapContainerStyle={{ width: "100%", height: "100%" }}
               center={{ lat: 11.0168, lng: 76.9558 }} zoom={12}
-              options={{ styles: darkMapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false }}>
+              options={{ styles: mapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false }}>
               {filteredZones.map((z, i) => (
                 <Marker key={i} position={{ lat: z.latitude, lng: z.longitude }}
                   icon={{

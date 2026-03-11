@@ -6,6 +6,7 @@ import {
     Heart, ShoppingCart, Banknote, Flame, Coffee
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker, Circle, InfoWindow } from "@react-google-maps/api";
+import { useTheme } from "../../context/ThemeContext";
 
 import { API_URL } from "../../config/api";
 const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -20,6 +21,17 @@ const darkMapStyle = [
     { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111827" }] },
     { featureType: "poi", elementType: "geometry", stylers: [{ color: "#1a2332" }] },
     { featureType: "transit", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
+];
+
+const lightMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#cbd5e1" }] },
+    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#f1f5f9" }] },
+    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
 ];
 
 const CATEGORY_META: Record<string, { icon: any; color: string; label: string }> = {
@@ -37,6 +49,7 @@ const CATEGORY_META: Record<string, { icon: any; color: string; label: string }>
 };
 
 export default function SafetyMap() {
+    const { theme } = useTheme();
     const [zones, setZones] = useState<any[]>([]);
     const [hazards, setHazards] = useState<any[]>([]);
     const [places, setPlaces] = useState<any[]>([]);
@@ -45,6 +58,8 @@ export default function SafetyMap() {
     const [activeFilter, setActiveFilter] = useState<string | null>(null);
     const [showLegend, setShowLegend] = useState(true);
     const mapRef = useRef<google.maps.Map | null>(null);
+
+    const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
     const { isLoaded } = useJsApiLoader({
         id: "google-map-script",
@@ -78,7 +93,7 @@ export default function SafetyMap() {
     const filteredPlaces = activeFilter ? places.filter(p => p.category.toLowerCase() === activeFilter.toLowerCase()) : places;
 
     return (
-        <div className="h-full flex flex-col relative w-full bg-black min-h-[calc(100vh-140px)]">
+        <div className={`h-full flex flex-col relative w-full min-h-[calc(100vh-140px)] ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
             {/* Map */}
             <div className="flex-1 w-full relative min-h-[500px]">
                 {isLoaded ? (
@@ -86,7 +101,7 @@ export default function SafetyMap() {
                         mapContainerStyle={{ width: "100%", height: "100%", minHeight: "600px" }}
                         center={userPos} zoom={13}
                         onLoad={(m) => { mapRef.current = m; }}
-                        options={{ styles: darkMapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}
+                        options={{ styles: mapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: false }}
                     >
                         {/* User position */}
                         <Marker position={userPos}
@@ -162,7 +177,7 @@ export default function SafetyMap() {
 
                 {/* Filter bar overlay */}
                 <div className="absolute top-4 left-4 right-4 flex items-center gap-2 z-10">
-                    <div className="card px-3 py-2 flex items-center gap-2 flex-wrap" style={{ backdropFilter: "blur(12px)", background: "rgba(17,24,39,0.85)" }}>
+                    <div className={`card px-3 py-2 flex items-center gap-2 flex-wrap ${theme === 'dark' ? '' : 'bg-white/90'}`} style={{ backdropFilter: "blur(12px)", background: theme === 'dark' ? "rgba(17,24,39,0.85)" : "rgba(255,255,255,0.9)" }}>
                         <Filter className="w-4 h-4" style={{ color: "var(--thor-text-muted)" }} />
                         <button onClick={() => setActiveFilter(null)}
                             className={`badge ${!activeFilter ? "badge-brand" : ""}`}
@@ -181,7 +196,7 @@ export default function SafetyMap() {
 
                 {/* Legend */}
                 {showLegend && (
-                    <div className="absolute bottom-6 left-4 card p-4 z-10" style={{ backdropFilter: "blur(12px)", background: "rgba(17,24,39,0.9)", width: 200 }}>
+                    <div className={`absolute bottom-6 left-4 card p-4 z-10 ${theme === 'dark' ? '' : 'bg-white/95'}`} style={{ backdropFilter: "blur(12px)", background: theme === 'dark' ? "rgba(17,24,39,0.9)" : "rgba(255,255,255,0.95)", width: 200 }}>
                         <div className="flex items-center justify-between mb-3">
                             <span className="text-caption font-semibold" style={{ color: "var(--thor-text)" }}>Legend</span>
                             <button onClick={() => setShowLegend(false)} style={{ color: "var(--thor-text-muted)" }}><X className="w-3.5 h-3.5" /></button>
@@ -198,7 +213,7 @@ export default function SafetyMap() {
                 )}
 
                 {/* Zone count */}
-                <div className="absolute bottom-6 right-4 card px-4 py-2.5 z-10" style={{ backdropFilter: "blur(12px)", background: "rgba(17,24,39,0.9)" }}>
+                <div className={`absolute bottom-6 right-4 card px-4 py-2.5 z-10 ${theme === 'dark' ? '' : 'bg-white/95'}`} style={{ backdropFilter: "blur(12px)", background: theme === 'dark' ? "rgba(17,24,39,0.9)" : "rgba(255,255,255,0.95)" }}>
                     <p className="text-caption" style={{ color: "var(--thor-text-muted)" }}>
                         <span className="font-semibold" style={{ color: "var(--thor-safe)" }}>{filteredZones.length}</span> safe zones · <span className="font-semibold" style={{ color: "var(--thor-danger)" }}>{hazards.length}</span> hazards
                     </p>

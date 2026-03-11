@@ -5,11 +5,10 @@ import {
     Wifi, WifiOff, Battery, BatteryWarning, AlertTriangle, Heart,
     X, ChevronUp, Radio, Siren, Send, Hospital, Building2, Landmark
 } from "lucide-react";
-import {
-    GoogleMap, useJsApiLoader, DirectionsRenderer, Marker, Circle
-} from "@react-google-maps/api";
+import { GoogleMap, useJsApiLoader, DirectionsRenderer, Marker, Circle } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 
 const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
 import { API_URL } from "../../config/api";
@@ -26,6 +25,17 @@ const darkMapStyle = [
     { featureType: "transit", elementType: "geometry", stylers: [{ color: "#2f3948" }] },
 ];
 
+const lightMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#cbd5e1" }] },
+    { featureType: "poi", elementType: "geometry", stylers: [{ color: "#f1f5f9" }] },
+    { featureType: "transit", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+];
+
 const SAFE_ZONE_ICONS: Record<string, { icon: any; color: string }> = {
     police_station: { icon: Building2, color: "#3b82f6" },
     hospital: { icon: Hospital, color: "#ef4444" },
@@ -35,11 +45,14 @@ const SAFE_ZONE_ICONS: Record<string, { icon: any; color: string }> = {
 };
 
 export default function SafetyMonitor() {
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { state } = useLocation();
     const { token } = useAuth();
     const destination = (state as any)?.destination || "Coimbatore";
     const selectedSpots = (state as any)?.selectedSpots || [];
+    
+    const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
     // Position
     const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
@@ -214,7 +227,7 @@ export default function SafetyMonitor() {
     const scoreColor = safetyScore?.level === "safe" ? "#22c55e" : safetyScore?.level === "caution" ? "#eab308" : "#ef4444";
 
     return (
-        <div className="h-screen bg-slate-950 flex flex-col overflow-hidden relative">
+        <div className={`h-screen flex flex-col overflow-hidden relative ${theme === 'dark' ? 'bg-slate-950' : 'bg-gray-50'}`}>
             {/* GEOFENCE ALERT BANNER */}
             <AnimatePresence>
                 {alertBanner && (
@@ -305,7 +318,7 @@ export default function SafetyMonitor() {
                         mapContainerStyle={{ width: "100%", height: "100%" }}
                         center={userPos} zoom={14}
                         onLoad={(map) => { mapRef.current = map; }}
-                        options={{ styles: darkMapStyle, zoomControl: false, mapTypeControl: false, streetViewControl: false, fullscreenControl: false, gestureHandling: "greedy" }}>
+                        options={{ styles: mapStyle, zoomControl: false, mapTypeControl: false, streetViewControl: false, fullscreenControl: false, gestureHandling: "greedy" }}>
 
                         {directions && <DirectionsRenderer directions={directions}
                             options={{ polylineOptions: { strokeColor: "#f59e0b", strokeWeight: 5 } }} />}

@@ -7,6 +7,7 @@ import {
   Activity, Navigation, AlertTriangle, Stethoscope
 } from "lucide-react";
 import { GoogleMap, useJsApiLoader, Marker } from "@react-google-maps/api";
+import { useTheme } from "../../context/ThemeContext";
 
 import { API_URL } from "../../config/api";
 const MAPS_KEY = import.meta.env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -18,12 +19,22 @@ const darkMapStyle = [
   { featureType: "road", elementType: "geometry", stylers: [{ color: "#1e293b" }] },
 ];
 
+const lightMapStyle = [
+  { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+  { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+  { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+];
+
 export default function TouristView() {
+  const { theme } = useTheme();
   const { id } = useParams();
   const navigate = useNavigate();
   const [tourist, setTourist] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [checkinSent, setCheckinSent] = useState(false);
+  
+  const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
 
   const { isLoaded } = useJsApiLoader({
     id: "google-map-script",
@@ -115,7 +126,7 @@ export default function TouristView() {
           {isLoaded ? (
             <GoogleMap mapContainerStyle={{ width: "100%", height: "100%" }}
               center={{ lat: tourist.current_lat, lng: tourist.current_long }} zoom={15}
-              options={{ styles: darkMapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false }}>
+              options={{ styles: mapStyle, zoomControl: true, mapTypeControl: false, streetViewControl: false }}>
               <Marker position={{ lat: tourist.current_lat, lng: tourist.current_long }}
                 icon={{ path: google.maps.SymbolPath.CIRCLE, scale: 12, fillColor: tourist.safety_status === "safe" ? "#22c55e" : "#ef4444", fillOpacity: 1, strokeColor: "#fff", strokeWeight: 3 }} />
               {tourist.movement_history?.map((m: any, i: number) => (

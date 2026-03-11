@@ -9,6 +9,7 @@ import {
 import { GoogleMap, useJsApiLoader, DirectionsRenderer } from "@react-google-maps/api";
 import { useTranslation } from "../../context/TranslationContext";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { API_URL } from "../../config/api";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
@@ -24,6 +25,15 @@ const darkMapStyle = [
     { featureType: "water", elementType: "geometry", stylers: [{ color: "#111111" }] },
     { featureType: "road", elementType: "geometry", stylers: [{ color: "#222222" }] },
     { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#111111" }] },
+];
+
+const lightMapStyle = [
+    { elementType: "geometry", stylers: [{ color: "#f8fafc" }] },
+    { elementType: "labels.text.stroke", stylers: [{ color: "#ffffff" }] },
+    { elementType: "labels.text.fill", stylers: [{ color: "#475569" }] },
+    { featureType: "water", elementType: "geometry", stylers: [{ color: "#e0f2fe" }] },
+    { featureType: "road", elementType: "geometry", stylers: [{ color: "#e2e8f0" }] },
+    { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#cbd5e1" }] },
 ];
 
 interface StopItem {
@@ -62,9 +72,12 @@ function buildGoogleMapsUrl(name: string, lat?: number, lng?: number): string {
 }
 
 export default function ActiveJourney() {
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { translate } = useTranslation();
     const { user, token } = useAuth();
+    
+    const mapStyle = theme === "dark" ? darkMapStyle : lightMapStyle;
     const [plan, setPlan] = useState<any>(null);
     const [guides, setGuides] = useState<any[]>([]);
     const [loadingGuides, setLoadingGuides] = useState(true);
@@ -316,17 +329,17 @@ Return ONLY a strictly valid JSON object with the following structure:
     if (!plan) return null;
 
     return (
-        <div className="flex flex-col h-full bg-black relative pb-20">
+        <div className={`flex flex-col h-full relative pb-20 ${theme === 'dark' ? 'bg-black' : 'bg-white'}`}>
 
             {/* Header */}
-            <div className="bg-zinc-900 border-b border-zinc-800 p-4 shrink-0 flex items-center justify-between shadow-2xl z-10 relative">
+            <div className={`border-b p-4 shrink-0 flex items-center justify-between shadow-2xl z-10 relative ${theme === 'dark' ? 'bg-zinc-900 border-zinc-800' : 'bg-gray-50 border-gray-200'}`}>
                 <div>
-                    <h1 className="text-xl font-bold text-white tracking-tight">{plan.destination}</h1>
+                    <h1 className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{plan.destination}</h1>
                     <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs font-bold bg-green-500/10 text-green-500 px-2 py-0.5 rounded-sm uppercase tracking-wider border border-green-500/20">
                             {translate("Active Journey")}
                         </span>
-                        <span className="text-xs text-zinc-500 flex items-center gap-1 font-medium">
+                        <span className={`text-xs flex items-center gap-1 font-medium ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>
                             <Heart className="w-3 h-3" /> {translate("Pulse:")} {lastPulse}
                         </span>
                     </div>
@@ -336,9 +349,6 @@ Return ONLY a strictly valid JSON object with the following structure:
                     <button onClick={() => navigate("/emergency")} className="p-2.5 bg-red-500/10 text-red-500 rounded-xl border border-red-500/20 hover:bg-red-500/20">
                         <ShieldAlert className="w-5 h-5" />
                     </button>
-                    <button onClick={() => navigate("/concierge")} className="p-2.5 bg-purple-500/10 text-purple-500 rounded-xl border border-purple-500/20 hover:bg-purple-500/20">
-                        <Info className="w-5 h-5" />
-                    </button>
                     <button onClick={openInGoogleMaps} className="p-2.5 bg-blue-500/10 text-blue-500 rounded-xl border border-blue-500/20 hover:bg-blue-500/20">
                         <ExternalLink className="w-5 h-5" />
                     </button>
@@ -346,13 +356,13 @@ Return ONLY a strictly valid JSON object with the following structure:
             </div>
 
             {/* Map Area */}
-            <div className="h-56 relative bg-zinc-950 shrink-0">
+            <div className={`h-56 relative shrink-0 ${theme === 'dark' ? 'bg-zinc-950' : 'bg-gray-100'}`}>
                 {isLoaded ? (
                     <GoogleMap
                         mapContainerStyle={{ width: "100%", height: "100%" }}
                         zoom={12}
                         center={{ lat: plan.hotel_recommendation?.latitude || 12.9716, lng: plan.hotel_recommendation?.longitude || 77.5946 }}
-                        options={{ styles: darkMapStyle, disableDefaultUI: true, gestureHandling: "greedy" }}
+                        options={{ styles: mapStyle, disableDefaultUI: true, gestureHandling: "greedy" }}
                     >
                         {directions && <DirectionsRenderer directions={directions} options={{
                             polylineOptions: { strokeColor: "#eab308", strokeWeight: 5, strokeOpacity: 0.8 },
@@ -371,10 +381,10 @@ Return ONLY a strictly valid JSON object with the following structure:
             <div className="flex-1 overflow-y-auto">
 
                 {/* ── AI Real-Time Prediction Panel ── */}
-                <div className="border-b border-zinc-900 px-4 py-5 bg-zinc-950">
+                <div className={`border-b px-4 py-5 ${theme === 'dark' ? 'border-zinc-900 bg-zinc-950' : 'border-gray-200 bg-gray-50'}`}>
                     <div className="flex items-center gap-2 mb-3">
                         <Sparkles className="w-5 h-5 text-yellow-500" />
-                        <h3 className="text-sm font-bold text-white uppercase tracking-wider">{translate("AI Live Insights")}</h3>
+                        <h3 className={`text-sm font-bold uppercase tracking-wider ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{translate("AI Live Insights")}</h3>
                         <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">gemini-3.1-flash-lite</span>
                     </div>
 
@@ -398,22 +408,22 @@ Return ONLY a strictly valid JSON object with the following structure:
                             </div>
 
                             <div className="space-y-2 mb-3">
-                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                <div className="flex items-start gap-2 text-xs">
                                     <CloudLightning className="w-4 h-4 text-blue-400 shrink-0" />
-                                    <span><strong className="text-white">Weather:</strong> {aiPrediction.weather}</span>
+                                    <span><strong className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Weather:</strong> {aiPrediction.weather}</span>
                                 </div>
-                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                <div className="flex items-start gap-2 text-xs">
                                     <Route className="w-4 h-4 text-orange-400 shrink-0" />
-                                    <span><strong className="text-white">Traffic:</strong> {aiPrediction.traffic}</span>
+                                    <span><strong className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Traffic:</strong> {aiPrediction.traffic}</span>
                                 </div>
-                                <div className="flex items-start gap-2 text-xs text-zinc-300">
+                                <div className="flex items-start gap-2 text-xs">
                                     <AlertTriangle className="w-4 h-4 text-red-400 shrink-0" />
-                                    <span><strong className="text-white">Alerts:</strong> {aiPrediction.news}</span>
+                                    <span><strong className={`${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Alerts:</strong> {aiPrediction.news}</span>
                                 </div>
                             </div>
 
-                            <div className="pt-3 border-t border-black/20">
-                                <p className="text-xs font-semibold text-white leading-relaxed">
+                            <div className={`pt-3 border-t ${theme === 'dark' ? 'border-black/20' : 'border-gray-300'}`}>
+                                <p className={`text-xs font-semibold leading-relaxed ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
                                     {aiPrediction.recommendation}
                                 </p>
                             </div>
@@ -422,16 +432,16 @@ Return ONLY a strictly valid JSON object with the following structure:
                 </div>
 
                 {/* ── Ordered Directions Panel ── */}
-                <div className="border-b border-zinc-900">
+                <div className={`border-b ${theme === 'dark' ? 'border-zinc-900' : 'border-gray-200'}`}>
                     <button
                         onClick={() => setShowDirections(v => !v)}
-                        className="w-full flex items-center justify-between px-4 py-4 bg-zinc-950 hover:bg-zinc-900 transition-colors"
+                        className={`w-full flex items-center justify-between px-4 py-4 transition-colors ${theme === 'dark' ? 'bg-zinc-950 hover:bg-zinc-900' : 'bg-gray-50 hover:bg-gray-100'}`}
                     >
                         <div className="flex items-center gap-2">
                             <Route className="w-5 h-5 text-yellow-500" />
-                            <span className="font-bold text-white text-sm">{translate("Your Route")} ({orderedStops.length} {translate("stops")})</span>
+                            <span className={`font-bold text-sm ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{translate("Your Route")} ({orderedStops.length} {translate("stops")})</span>
                         </div>
-                        {showDirections ? <ChevronUp className="w-4 h-4 text-zinc-500" /> : <ChevronDown className="w-4 h-4 text-zinc-500" />}
+                        {showDirections ? <ChevronUp className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`} /> : <ChevronDown className={`w-4 h-4 ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-500'}`} />}
                     </button>
 
                     <AnimatePresence>
@@ -443,7 +453,7 @@ Return ONLY a strictly valid JSON object with the following structure:
                                 transition={{ duration: 0.25 }}
                                 className="overflow-hidden"
                             >
-                                <div className="px-4 pb-4 space-y-2 bg-zinc-950">
+                                <div className={`px-4 pb-4 space-y-2 ${theme === 'dark' ? 'bg-zinc-950' : 'bg-gray-50'}`}>
                                     {orderedStops.map((stop, idx) => (
                                         <div key={idx} className="flex items-stretch gap-3">
                                             {/* Timeline line */}
@@ -457,17 +467,17 @@ Return ONLY a strictly valid JSON object with the following structure:
                                                     {getStopIcon(stop.type)}
                                                 </div>
                                                 {idx < orderedStops.length - 1 && (
-                                                    <div className="w-px flex-1 bg-zinc-800 my-1 min-h-[12px]" />
+                                                    <div className={`w-px flex-1 min-h-[12px] ${theme === 'dark' ? 'bg-zinc-800' : 'bg-gray-300'} my-1`} />
                                                 )}
                                             </div>
 
                                             {/* Stop info */}
                                             <div className="flex-1 flex items-center justify-between gap-2 pb-2">
                                                 <div className="min-w-0">
-                                                    <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">
+                                                    <p className={`text-[10px] uppercase tracking-widest font-bold ${theme === 'dark' ? 'text-zinc-500' : 'text-gray-600'}`}>
                                                         {stop.day ? `Day ${stop.day} · ` : ""}{getStopLabel(stop.type)}
                                                     </p>
-                                                    <p className="text-white text-sm font-semibold truncate">{stop.label}</p>
+                                                    <p className={`text-sm font-semibold truncate ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{stop.label}</p>
                                                 </div>
                                                 <a
                                                     href={buildGoogleMapsUrl(stop.label, stop.lat, stop.lng)}
@@ -484,7 +494,7 @@ Return ONLY a strictly valid JSON object with the following structure:
                             </motion.div>
                         )}
                         {showDirections && orderedStops.length === 0 && (
-                            <div className="px-4 pb-4 bg-zinc-950">
+                            <div className={`px-4 py-6 border-b ${theme === 'dark' ? 'border-zinc-900' : 'border-gray-200'}`}>
                                 <p className="text-sm text-zinc-500 italic">{translate("No stops selected in your plan.")}</p>
                             </div>
                         )}
@@ -492,38 +502,38 @@ Return ONLY a strictly valid JSON object with the following structure:
                 </div>
 
                 {/* ── Local Guides Section ── */}
-                <div className="px-4 py-6 border-b border-zinc-900">
+                <div className={`px-4 py-6 border-b ${theme === 'dark' ? 'border-zinc-900' : 'border-gray-200'}`}>
                     <div className="flex items-center gap-2 mb-4">
                         <Users className="w-5 h-5 text-yellow-500" />
-                        <h3 className="text-lg font-bold text-white">{translate("Local Guides")}</h3>
+                        <h3 className={`text-lg font-bold ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{translate("Local Guides")}</h3>
                     </div>
 
                     {loadingGuides ? (
                         <div className="flex gap-4 overflow-x-auto pb-4 noscrollbar">
                             {[1, 2, 3].map(i => (
-                                <div key={i} className="min-w-[280px] h-32 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse" />
+                                <div key={i} className={`min-w-[280px] h-32 rounded-2xl animate-pulse ${theme === 'dark' ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-100 border-gray-300'}`} />
                             ))}
                         </div>
                     ) : guides.length > 0 ? (
                         <div className="flex gap-4 overflow-x-auto pb-4 noscrollbar">
                             {guides.map((g, i) => (
-                                <div key={i} className="min-w-[280px] bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-between">
+                                <div key={i} className={`min-w-[280px] rounded-2xl p-4 flex flex-col justify-between ${theme === 'dark' ? 'bg-zinc-900 border border-zinc-800' : 'bg-gray-100 border-gray-300'}`}>
                                     <div>
                                         <div className="flex justify-between items-start mb-1">
-                                            <h4 className="font-bold text-white text-[15px] truncate max-w-[170px]">{g.name}</h4>
+                                            <h4 className={`font-bold text-[15px] truncate max-w-[170px] ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>{g.name}</h4>
                                             <span className="flex items-center gap-1 text-xs text-yellow-500 font-bold bg-yellow-500/10 px-2 py-0.5 rounded-md shrink-0">
                                                 <Star className="w-3 h-3 fill-yellow-500" /> {g.rating}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-zinc-400 mb-2 line-clamp-2">{g.role}</p>
+                                        <p className={`text-xs mb-2 line-clamp-2 ${theme === 'dark' ? 'text-zinc-400' : 'text-gray-600'}`}>{g.role}</p>
                                         <div className="flex items-center gap-1.5 flex-wrap">
                                             {g.languages?.map((l: string, idx: number) => (
-                                                <span key={idx} className="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">{l}</span>
+                                                <span key={idx} className={`text-[10px] px-2 py-0.5 rounded border ${theme === 'dark' ? 'bg-zinc-800 text-zinc-300 border-zinc-700' : 'bg-gray-200 text-gray-700 border-gray-300'}`}>{l}</span>
                                             ))}
                                         </div>
                                     </div>
-                                    <div className="mt-4 pt-3 border-t border-zinc-800 flex justify-between items-center">
-                                        <span className="text-[11px] font-semibold text-green-400 max-w-[100px] truncate">{g.price}</span>
+                                    <div className={`mt-4 pt-3 border-t flex justify-between items-center ${theme === 'dark' ? 'border-zinc-800' : 'border-gray-300'}`}>
+                                        <span className={`text-[11px] font-semibold max-w-[100px] truncate ${theme === 'dark' ? 'text-green-400' : 'text-green-600'}`}>{g.price}</span>
                                         <div className="flex gap-2">
                                             <a href={`https://www.google.com/maps/place/?q=place_id:${g.id}`} target="_blank" rel="noreferrer"
                                                 className="flex items-center gap-1.5 text-xs text-black bg-white hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
@@ -558,12 +568,12 @@ Return ONLY a strictly valid JSON object with the following structure:
             </div>
 
             {/* Quick Actions Panel */}
-            <div className="shrink-0 bg-zinc-900 border-t border-zinc-800 p-4 shadow-[0_-20px_40px_rgba(0,0,0,0.5)] relative z-10">
+            <div className={`shrink-0 p-4 relative z-10 ${theme === 'dark' ? 'bg-zinc-900 border-t border-zinc-800' : 'bg-gray-50 border-t border-gray-300'}`}>
                 <div className="flex gap-3 overflow-x-auto pb-2 noscrollbar">
-                    <button onClick={() => navigate("/map")} className="flex items-center gap-2 shrink-0 bg-black border border-zinc-800 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:border-yellow-500 transition-colors">
+                    <button onClick={() => navigate("/map")} className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${theme === 'dark' ? 'bg-black border border-zinc-800 text-white hover:border-yellow-500' : 'bg-white border-gray-300 text-gray-900 hover:border-yellow-500'}`}>
                         <Shield className="w-4 h-4 text-blue-500" /> {translate("Safety Map")}
                     </button>
-                    <button onClick={openInGoogleMaps} className="flex items-center gap-2 shrink-0 bg-black border border-zinc-800 px-4 py-2.5 rounded-xl text-sm font-semibold text-white hover:border-yellow-500 transition-colors">
+                    <button onClick={openInGoogleMaps} className={`flex items-center gap-2 shrink-0 px-4 py-2.5 rounded-xl text-sm font-semibold transition-colors ${theme === 'dark' ? 'bg-black border border-zinc-800 text-white hover:border-yellow-500' : 'bg-white border-gray-300 text-gray-900 hover:border-yellow-500'}`}>
                         <Navigation className="w-4 h-4 text-green-500" /> {translate("Start Navigation")}
                     </button>
                 </div>
