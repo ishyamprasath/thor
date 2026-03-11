@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { useTranslation } from "../../context/TranslationContext";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_KEY = "AIzaSyA9l7RFaB4h4BtowJuZL2dbnqvDcUb5OGY";
+const GEMINI_API_KEY = import.meta.env.VITE_PUBLIC_GEMINI_API_KEY;
 const GOOGLE_MAPS_KEY = (import.meta as any).env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
 const LIBS: ("places")[] = ["places"];
 

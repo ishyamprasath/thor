@@ -13,7 +13,7 @@ import { API_URL } from "../../config/api";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const GOOGLE_MAPS_KEY = (import.meta as any).env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
-const GEMINI_API_KEY = "AIzaSyA9l7RFaB4h4BtowJuZL2dbnqvDcUb5OGY";
+const GEMINI_API_KEY = import.meta.env.VITE_PUBLIC_GEMINI_API_KEY;
 const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 const LIBS: ("places")[] = ["places"];
 
