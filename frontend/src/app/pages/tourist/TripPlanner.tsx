@@ -5,6 +5,7 @@ import {
     UtensilsCrossed, Star, ChevronRight, Sparkles
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { useTheme } from "../../context/ThemeContext";
 import { useJsApiLoader, Autocomplete } from "@react-google-maps/api";
 import { useNavigate } from "react-router";
 import { useTranslation } from "../../context/TranslationContext";
@@ -102,20 +103,20 @@ function SelectableCard({
             onClick={onToggle}
             className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 ${selected
                 ? "border-yellow-500 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.12)]"
-                : "border-zinc-800 bg-black hover:border-zinc-600"
+                : "border-[var(--thor-border)] bg-[var(--thor-surface-2)] hover:border-[var(--thor-border-hover)]"
                 }`}
         >
-            <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-yellow-500 bg-yellow-500" : "border-zinc-600"}`}>
+            <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-yellow-500 bg-yellow-500" : "border-[var(--thor-border)]"}`}>
                 {selected && <Check className="w-3 h-3 text-black" strokeWidth={3} />}
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                    <span className={`font-semibold text-sm truncate ${selected ? "text-white" : "text-zinc-200"}`}>{title}</span>
+                    <span className={`font-semibold text-sm truncate ${selected ? "text-white" : "text-[var(--thor-text-secondary)]"}`}>{title}</span>
                     {badge && (
                         <span className="text-[10px] font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-1.5 py-0.5 rounded shrink-0">{badge}</span>
                     )}
                 </div>
-                {subtitle && <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{subtitle}</p>}
+                {subtitle && <p className="text-xs text-[var(--thor-text-muted)] mt-0.5 line-clamp-2">{subtitle}</p>}
             </div>
             {icon && <div className="shrink-0 text-zinc-600 mt-0.5">{icon}</div>}
         </motion.button>
@@ -138,20 +139,20 @@ function RadioCard({
             onClick={onSelect}
             className={`w-full text-left p-4 rounded-2xl border transition-all duration-200 flex items-start gap-3 ${selected
                 ? "border-yellow-500 bg-yellow-500/10 shadow-[0_0_20px_rgba(234,179,8,0.12)]"
-                : "border-zinc-800 bg-black hover:border-zinc-600"
+                : "border-[var(--thor-border)] bg-[var(--thor-surface-2)] hover:border-[var(--thor-border-hover)]"
                 }`}
         >
-            <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-yellow-500" : "border-zinc-600"}`}>
+            <div className={`mt-0.5 w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${selected ? "border-yellow-500" : "border-[var(--thor-border)]"}`}>
                 {selected && <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />}
             </div>
             <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-2">
-                    <span className={`font-semibold text-sm truncate ${selected ? "text-white" : "text-zinc-200"}`}>{title}</span>
+                    <span className={`font-semibold text-sm truncate ${selected ? "text-white" : "text-[var(--thor-text-secondary)]"}`}>{title}</span>
                     {badge && (
                         <span className="text-[10px] font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-1.5 py-0.5 rounded shrink-0">{badge}</span>
                     )}
                 </div>
-                {subtitle && <p className="text-xs text-zinc-500 mt-0.5 line-clamp-2">{subtitle}</p>}
+                {subtitle && <p className="text-xs text-[var(--thor-text-muted)] mt-0.5 line-clamp-2">{subtitle}</p>}
             </div>
         </motion.button>
     );
@@ -160,6 +161,7 @@ function RadioCard({
 export default function TripPlanner() {
     const navigate = useNavigate();
     const { token } = useAuth();
+    const { theme } = useTheme();
     const { translate } = useTranslation();
     const [step, setStep] = useState(1);
     const [loading, setLoading] = useState(false);
@@ -361,30 +363,31 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                 <div className="w-16 h-16 rounded-full bg-yellow-500/10 flex items-center justify-center mx-auto mb-4 border border-yellow-500/20 shadow-[0_0_30px_rgba(234,179,8,0.15)]">
                     <Target className="w-8 h-8 text-yellow-500" />
                 </div>
-                <h1 className="text-3xl font-bold tracking-tight text-white">{translate("Plan Your Journey")}</h1>
-                <p className="text-zinc-400 mt-2">{translate("Powered by Gemini Intelligence")}</p>
+                <h1 className="text-3xl font-bold tracking-tight" style={{ color: "var(--thor-text)" }}>{translate("Plan Your Journey")}</h1>
+                <p className="mt-2" style={{ color: "var(--thor-text-secondary)" }}>{translate("Powered by Gemini Intelligence")}</p>
             </div>
 
             {/* Progress dots */}
             <div className="flex items-center justify-center gap-2 mb-8">
                 {[1, 2, 3, 4].map(s => (
-                    <div key={s} className={`h-2 rounded-full transition-all duration-300 ${step === s ? "w-8 bg-yellow-500" : step > s ? "w-2 bg-yellow-500/50" : "w-2 bg-zinc-700"}`} />
+                    <div key={s} className={`h-2 rounded-full transition-all duration-300 ${step === s ? "w-8 bg-yellow-500" : step > s ? "w-2 bg-yellow-500/50" : "w-2"}`} style={{ backgroundColor: step > s ? "var(--thor-border)" : "var(--thor-border)" }} />
                 ))}
             </div>
 
             {/* Stepper Content */}
-            <div className="bg-zinc-900 border border-zinc-800 rounded-3xl p-6 shadow-2xl relative overflow-hidden">
+            <div className="rounded-3xl p-6 shadow-2xl relative overflow-hidden border"
+                 style={{ background: "var(--thor-surface)", borderColor: "var(--thor-border)" }}>
                 <AnimatePresence mode="wait">
 
                     {/* Step 1 — Destination */}
                     {step === 1 && (
                         <motion.div key="1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                            <h2 className="text-xl font-bold text-white mb-6">1. {translate("Where to?")}</h2>
+                            <h2 className="text-xl font-bold mb-6" style={{ color: "var(--thor-text)" }}>1. {translate("Where to?")}</h2>
                             <div className="space-y-4">
                                 <div>
-                                    <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">{translate("Destination")}</label>
+                                    <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>{translate("Destination")}</label>
                                     <div className="relative z-50">
-                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-zinc-500 z-10" />
+                                        <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 z-10" style={{ color: "var(--thor-text-muted)" }} />
                                         {isLoaded ? (
                                             <Autocomplete onLoad={onLoad} onPlaceChanged={onPlaceChanged}>
                                                 <input
@@ -392,7 +395,12 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                                     value={destination}
                                                     onChange={(e) => setDestination(e.target.value)}
                                                     placeholder={translate("e.g. Kyoto, Japan")}
-                                                    className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none focus:border-yellow-500 transition-colors relative z-0"
+                                                    className="w-full rounded-xl py-4 pl-12 pr-4 focus:outline-none transition-colors relative z-0 border"
+                                                    style={{
+                                                        background: "var(--thor-surface-2)",
+                                                        borderColor: "var(--thor-border)",
+                                                        color: "var(--thor-text)"
+                                                    }}
                                                 />
                                             </Autocomplete>
                                         ) : (
@@ -401,7 +409,12 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                                 value={destination}
                                                 onChange={(e) => setDestination(e.target.value)}
                                                 placeholder={translate("Loading maps...")}
-                                                className="w-full bg-black border border-zinc-800 rounded-xl py-4 pl-12 pr-4 text-white focus:outline-none transition-colors opacity-50"
+                                                className="w-full rounded-xl py-4 pl-12 pr-4 focus:outline-none transition-colors opacity-50 border"
+                                                style={{
+                                                    background: "var(--thor-surface-2)",
+                                                    borderColor: "var(--thor-border)",
+                                                    color: "var(--thor-text)"
+                                                }}
                                                 disabled
                                             />
                                         )}
@@ -410,7 +423,12 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                 <button
                                     onClick={() => { if (destination) setStep(2); }}
                                     disabled={!destination}
-                                    className="w-full bg-white text-black font-bold py-4 rounded-xl mt-6 flex flex-row items-center justify-center gap-2 hover:bg-zinc-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    className="w-full font-bold py-4 rounded-xl mt-6 flex flex-row items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors border"
+                                    style={{
+                                        background: "var(--thor-text)",
+                                        color: "var(--thor-bg)",
+                                        borderColor: "var(--thor-border)"
+                                    }}
                                 >
                                     {translate("Next Step")} <ArrowRight className="w-4 h-4" />
                                 </button>
@@ -421,30 +439,40 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                     {/* Step 2 — Dates */}
                     {step === 2 && (
                         <motion.div key="2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
-                            <h2 className="text-xl font-bold text-white mb-6">2. {translate("When?")}</h2>
+                            <h2 className="text-xl font-bold mb-6" style={{ color: "var(--thor-text)" }}>2. {translate("When?")}</h2>
                             <div className="space-y-4">
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">{translate("Start Date")}</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>{translate("Start Date")}</label>
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-muted)" }} />
                                             <input
                                                 type="date"
                                                 value={startDate}
                                                 onChange={(e) => setStartDate(e.target.value)}
-                                                className="w-full bg-black border border-zinc-800 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                                className="w-full rounded-xl py-3 pl-10 pr-3 focus:outline-none border"
+                                                style={{
+                                                    background: "var(--thor-surface-2)",
+                                                    borderColor: "var(--thor-border)",
+                                                    color: "var(--thor-text)"
+                                                }}
                                             />
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">{translate("End Date")}</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>{translate("End Date")}</label>
                                         <div className="relative">
-                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-500" />
+                                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "var(--thor-text-muted)" }} />
                                             <input
                                                 type="date"
                                                 value={endDate}
                                                 onChange={(e) => setEndDate(e.target.value)}
-                                                className="w-full bg-black border border-zinc-800 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                                className="w-full rounded-xl py-3 pl-10 pr-3 focus:outline-none border"
+                                                style={{
+                                                    background: "var(--thor-surface-2)",
+                                                    borderColor: "var(--thor-border)",
+                                                    color: "var(--thor-text)"
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -453,22 +481,32 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                 {/* Additional Traveler Information */}
                                 <div className="space-y-4 mt-6">
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Traveler Age</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Traveler Age</label>
                                         <input
                                             type="number"
                                             value={travelerAge}
                                             onChange={(e) => setTravelerAge(e.target.value)}
                                             placeholder="e.g., 25"
-                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                            className="w-full rounded-xl py-3 px-3 focus:outline-none border"
+                                            style={{
+                                                background: "var(--thor-surface-2)",
+                                                borderColor: "var(--thor-border)",
+                                                color: "var(--thor-text)"
+                                            }}
                                         />
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Group Type</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Group Type</label>
                                         <select
                                             value={travelerGroup}
                                             onChange={(e) => setTravelerGroup(e.target.value)}
-                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                            className="w-full rounded-xl py-3 px-3 focus:outline-none border"
+                                            style={{
+                                                background: "var(--thor-surface-2)",
+                                                borderColor: "var(--thor-border)",
+                                                color: "var(--thor-text)"
+                                            }}
                                         >
                                             <option value="solo">Solo Traveler</option>
                                             <option value="couple">Couple</option>
@@ -478,11 +516,16 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Budget Level</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Budget Level</label>
                                         <select
                                             value={budgetLevel}
                                             onChange={(e) => setBudgetLevel(e.target.value)}
-                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                            className="w-full rounded-xl py-3 px-3 focus:outline-none border"
+                                            style={{
+                                                background: "var(--thor-surface-2)",
+                                                borderColor: "var(--thor-border)",
+                                                color: "var(--thor-text)"
+                                            }}
                                         >
                                             <option value="budget">Budget ($)</option>
                                             <option value="moderate">Moderate ($$)</option>
@@ -491,10 +534,10 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Travel Interests (Select multiple)</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Travel Interests (Select multiple)</label>
                                         <div className="grid grid-cols-2 gap-2">
                                             {['Food', 'Culture', 'Nature', 'Nightlife', 'Shopping', 'Adventure', 'Photography'].map((interest) => (
-                                                <label key={interest} className="flex items-center gap-2 p-2 border border-zinc-800 rounded-lg cursor-pointer hover:border-yellow-500">
+                                                <label key={interest} className="flex items-center gap-2 p-2 rounded-lg cursor-pointer border hover:border-yellow-500" style={{ borderColor: "var(--thor-border)" }}>
                                                     <input
                                                         type="checkbox"
                                                         checked={travelInterests.includes(interest)}
@@ -505,20 +548,30 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                                                 setTravelInterests(travelInterests.filter(i => i !== interest));
                                                             }
                                                         }}
-                                                        className="w-4 h-4 text-yellow-500 bg-black border-zinc-800 rounded focus:ring-yellow-500 focus:ring-2"
+                                                        className="w-4 h-4 rounded focus:ring-2 focus:ring-yellow-500"
+                                                        style={{
+                                                            background: "var(--thor-surface-2)",
+                                                            borderColor: "var(--thor-border)",
+                                                            color: "var(--thor-text)"
+                                                        }}
                                                     />
-                                                    <span className="text-sm text-white">{interest}</span>
+                                                    <span className="text-sm" style={{ color: "var(--thor-text)" }}>{interest}</span>
                                                 </label>
                                             ))}
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Travel Pace</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Travel Pace</label>
                                         <select
                                             value={travelPace}
                                             onChange={(e) => setTravelPace(e.target.value)}
-                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                            className="w-full rounded-xl py-3 px-3 focus:outline-none border"
+                                            style={{
+                                                background: "var(--thor-surface-2)",
+                                                borderColor: "var(--thor-border)",
+                                                color: "var(--thor-text)"
+                                            }}
                                         >
                                             <option value="relaxed">Relaxed (Fewer activities, more time to enjoy)</option>
                                             <option value="balanced">Balanced (Good mix of activities and free time)</option>
@@ -527,11 +580,16 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                     </div>
 
                                     <div>
-                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Dietary Preference</label>
+                                        <label className="text-xs font-bold uppercase tracking-widest mb-2 block" style={{ color: "var(--thor-text-muted)" }}>Dietary Preference</label>
                                         <select
                                             value={dietaryPreference}
                                             onChange={(e) => setDietaryPreference(e.target.value)}
-                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                            className="w-full rounded-xl py-3 px-3 focus:outline-none border"
+                                            style={{
+                                                background: "var(--thor-surface-2)",
+                                                borderColor: "var(--thor-border)",
+                                                color: "var(--thor-text)"
+                                            }}
                                         >
                                             <option value="none">No restrictions</option>
                                             <option value="vegetarian">Vegetarian</option>
@@ -546,13 +604,42 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                 </div>
 
                                 <div className="flex gap-3 mt-8">
-                                    <button onClick={() => setStep(1)} className="p-4 rounded-xl border border-zinc-800 text-zinc-400 hover:text-white hover:bg-zinc-800">
+                                    <button 
+                                        onClick={() => setStep(1)} 
+                                        className="p-4 rounded-xl border transition-colors"
+                                        style={{
+                                            borderColor: "var(--thor-border)",
+                                            color: "var(--thor-text-muted)"
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            e.currentTarget.style.color = "var(--thor-text)";
+                                            e.currentTarget.style.backgroundColor = "var(--thor-surface-3)";
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            e.currentTarget.style.color = "var(--thor-text-muted)";
+                                            e.currentTarget.style.backgroundColor = "transparent";
+                                        }}
+                                    >
                                         <ArrowLeft className="w-5 h-5" />
                                     </button>
                                     <button
                                         onClick={handleFetchSuggestions}
                                         disabled={!startDate || !endDate || loading}
-                                        className="flex-1 bg-yellow-500 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 disabled:opacity-50"
+                                        className="flex-1 font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
+                                        style={{
+                                            background: "var(--thor-brand)",
+                                            color: "#000000"
+                                        }}
+                                        onMouseEnter={(e) => {
+                                            if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.background = "var(--thor-brand-light)";
+                                            }
+                                        }}
+                                        onMouseLeave={(e) => {
+                                            if (!e.currentTarget.disabled) {
+                                                e.currentTarget.style.background = "var(--thor-brand)";
+                                            }
+                                        }}
                                     >
                                         {loading ? (
                                             <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: "linear" }}>
@@ -572,10 +659,25 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                         <motion.div key="3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                             <div className="flex items-center justify-between mb-6">
                                 <div>
-                                    <h2 className="text-xl font-bold text-white">3. {translate("Build Your Plan")}</h2>
-                                    <p className="text-xs text-zinc-500 mt-0.5">{translate("Select what you want — we'll build the route!")}</p>
+                                    <h2 className="text-xl font-bold" style={{ color: "var(--thor-text)" }}>3. {translate("Build Your Plan")}</h2>
+                                    <p className="text-xs mt-0.5" style={{ color: "var(--thor-text-muted)" }}>{translate("Select what you want — we'll build the route!")}</p>
                                 </div>
-                                <button onClick={() => setStep(2)} className="p-2 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white">
+                                <button 
+                                    onClick={() => setStep(2)} 
+                                    className="p-2 rounded-lg border transition-colors"
+                                    style={{
+                                        borderColor: "var(--thor-border)",
+                                        color: "var(--thor-text-muted)"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.color = "var(--thor-text)";
+                                        e.currentTarget.style.backgroundColor = "var(--thor-surface-3)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.color = "var(--thor-text-muted)";
+                                        e.currentTarget.style.backgroundColor = "transparent";
+                                    }}
+                                >
                                     <ArrowLeft className="w-4 h-4" />
                                 </button>
                             </div>
@@ -586,8 +688,8 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                 <div>
                                     <div className="flex items-center gap-2 mb-3">
                                         <Hotel className="w-4 h-4 text-blue-400" />
-                                        <span className="text-sm font-bold text-white uppercase tracking-wider">{translate("Accommodation")}</span>
-                                        <span className="text-xs text-zinc-500">(pick one)</span>
+                                        <span className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--thor-text)" }}>{translate("Accommodation")}</span>
+                                        <span className="text-xs" style={{ color: "var(--thor-text-muted)" }}>(pick one)</span>
                                     </div>
                                     <div className="space-y-2">
                                         {suggestions.accommodation_options.map((opt, i) => (
@@ -610,7 +712,25 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                             <button
                                                 key={i}
                                                 onClick={() => setViewDay(i)}
-                                                className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${viewDay === i ? "bg-yellow-500 text-black" : "bg-zinc-800 text-zinc-400 hover:bg-zinc-700"}`}
+                                                className={`shrink-0 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                                                    viewDay === i 
+                                                        ? "" 
+                                                        : ""
+                                                }`}
+                                                style={{
+                                                    background: viewDay === i ? "var(--thor-brand)" : "var(--thor-surface-2)",
+                                                    color: viewDay === i ? "#000000" : "var(--thor-text-muted)"
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    if (viewDay !== i) {
+                                                        e.currentTarget.style.backgroundColor = "var(--thor-surface-3)";
+                                                    }
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    if (viewDay !== i) {
+                                                        e.currentTarget.style.backgroundColor = "var(--thor-surface-2)";
+                                                    }
+                                                }}
                                             >
                                                 Day {d.day}
                                             </button>
@@ -625,8 +745,8 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                         <div>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Coffee className="w-4 h-4 text-amber-400" />
-                                                <span className="text-sm font-bold text-white uppercase tracking-wider">{translate("Breakfast")} — Day {currentDay.day}</span>
-                                                <span className="text-xs text-zinc-500">(pick one)</span>
+                                                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--thor-text)" }}>{translate("Breakfast")} — Day {currentDay.day}</span>
+                                                <span className="text-xs" style={{ color: "var(--thor-text-muted)" }}>(pick one)</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {currentDay.breakfast_options.map((opt, i) => (
@@ -645,8 +765,8 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                         <div>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <MapPin className="w-4 h-4 text-yellow-500" />
-                                                <span className="text-sm font-bold text-white uppercase tracking-wider">{translate("Places to Visit")} — Day {currentDay.day}</span>
-                                                <span className="text-xs text-zinc-500">(pick multiple)</span>
+                                                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--thor-text)" }}>{translate("Places to Visit")} — Day {currentDay.day}</span>
+                                                <span className="text-xs" style={{ color: "var(--thor-text-muted)" }}>(pick multiple)</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {currentDay.spot_options.map((opt, i) => {
@@ -668,8 +788,8 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                         <div>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Sun className="w-4 h-4 text-orange-400" />
-                                                <span className="text-sm font-bold text-white uppercase tracking-wider">{translate("Lunch")} — Day {currentDay.day}</span>
-                                                <span className="text-xs text-zinc-500">(pick one)</span>
+                                                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--thor-text)" }}>{translate("Lunch")} — Day {currentDay.day}</span>
+                                                <span className="text-xs" style={{ color: "var(--thor-text-muted)" }}>(pick one)</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {currentDay.lunch_options.map((opt, i) => (
@@ -688,8 +808,8 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                         <div>
                                             <div className="flex items-center gap-2 mb-3">
                                                 <Moon className="w-4 h-4 text-purple-400" />
-                                                <span className="text-sm font-bold text-white uppercase tracking-wider">{translate("Dinner")} — Day {currentDay.day}</span>
-                                                <span className="text-xs text-zinc-500">(pick one)</span>
+                                                <span className="text-sm font-bold uppercase tracking-wider" style={{ color: "var(--thor-text)" }}>{translate("Dinner")} — Day {currentDay.day}</span>
+                                                <span className="text-xs" style={{ color: "var(--thor-text-muted)" }}>(pick one)</span>
                                             </div>
                                             <div className="space-y-2">
                                                 {currentDay.dinner_options.map((opt, i) => (
@@ -708,14 +828,28 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                             </div>
 
                             {/* Confirm button */}
-                            <div className="mt-6 pt-4 border-t border-zinc-800">
+                            <div className="mt-6 pt-4 border-t" style={{ borderColor: "var(--thor-border)" }}>
                                 {!canConfirm && (
-                                    <p className="text-xs text-zinc-500 text-center mb-3">⚡ Select an accommodation to continue</p>
+                                    <p className="text-xs text-center mb-3" style={{ color: "var(--thor-text-muted)" }}>⚡ Select an accommodation to continue</p>
                                 )}
                                 <button
                                     onClick={() => setStep(4)}
                                     disabled={!canConfirm}
-                                    className="w-full bg-yellow-500 text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                                    className="w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                    style={{
+                                        background: "var(--thor-brand)",
+                                        color: "#000000"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        if (!e.currentTarget.disabled) {
+                                            e.currentTarget.style.background = "var(--thor-brand-light)";
+                                        }
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        if (!e.currentTarget.disabled) {
+                                            e.currentTarget.style.background = "var(--thor-brand)";
+                                        }
+                                    }}
                                 >
                                     {translate("Review & Confirm")} <ChevronRight className="w-4 h-4" />
                                 </button>
@@ -728,15 +862,30 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                         <motion.div key="4" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-full bg-green-500/20 text-green-500 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "rgba(16, 185, 129, 0.2)", color: "var(--thor-safe)" }}>
                                         <Check className="w-5 h-5" />
                                     </div>
                                     <div>
-                                        <h2 className="text-xl font-bold text-white">{translate("Your Custom Plan")}</h2>
-                                        <p className="text-zinc-500 text-sm">{suggestions.destination}</p>
+                                        <h2 className="text-xl font-bold" style={{ color: "var(--thor-text)" }}>{translate("Your Custom Plan")}</h2>
+                                        <p className="text-sm" style={{ color: "var(--thor-text-secondary)" }}>{suggestions.destination}</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setStep(3)} className="p-2 rounded-lg border border-zinc-800 text-zinc-400 hover:text-white">
+                                <button 
+                                    onClick={() => setStep(3)} 
+                                    className="p-2 rounded-lg border transition-colors"
+                                    style={{
+                                        borderColor: "var(--thor-border)",
+                                        color: "var(--thor-text-muted)"
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.currentTarget.style.color = "var(--thor-text)";
+                                        e.currentTarget.style.backgroundColor = "var(--thor-surface-3)";
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.currentTarget.style.color = "var(--thor-text-muted)";
+                                        e.currentTarget.style.backgroundColor = "transparent";
+                                    }}
+                                >
                                     <ArrowLeft className="w-4 h-4" />
                                 </button>
                             </div>
@@ -744,11 +893,11 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                             <div className="space-y-3 max-h-[55vh] overflow-y-auto noscrollbar">
                                 {/* Hotel */}
                                 {selectedHotel && (
-                                    <div className="bg-black border border-blue-500/20 rounded-xl p-4 flex items-center gap-3">
-                                        <div className="p-2 bg-blue-500/10 text-blue-400 rounded-lg"><Hotel className="w-4 h-4" /></div>
+                                    <div className="rounded-xl p-4 flex items-center gap-3 border" style={{ background: "var(--thor-surface-2)", borderColor: "rgba(59, 130, 246, 0.2)" }}>
+                                        <div className="p-2 rounded-lg" style={{ background: "rgba(59, 130, 246, 0.1)", color: "#3B82F6" }}><Hotel className="w-4 h-4" /></div>
                                         <div className="flex-1 min-w-0">
-                                            <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Accommodation</p>
-                                            <p className="text-white font-semibold text-sm truncate">{selectedHotel.name}</p>
+                                            <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: "var(--thor-text-muted)" }}>Accommodation</p>
+                                            <p className="font-semibold text-sm truncate" style={{ color: "var(--thor-text)" }}>{selectedHotel.name}</p>
                                         </div>
                                     </div>
                                 )}
@@ -761,35 +910,35 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                     const dk = selectedDinners[d.day];
 
                                     return (
-                                        <div key={d.day} className="bg-black border border-zinc-800 rounded-xl overflow-hidden">
-                                            <div className="bg-zinc-800/60 px-4 py-2 text-xs font-bold text-yellow-500 uppercase tracking-wider">Day {d.day}</div>
+                                        <div key={d.day} className="rounded-xl overflow-hidden border" style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }}>
+                                            <div className="px-4 py-2 text-xs font-bold uppercase tracking-wider" style={{ background: "rgba(234, 179, 8, 0.1)", color: "var(--thor-brand)" }}>Day {d.day}</div>
                                             <div className="p-4 space-y-2">
                                                 {bk && (
-                                                    <div className="flex items-center gap-2 text-xs text-zinc-300">
+                                                    <div className="flex items-center gap-2 text-xs" style={{ color: "var(--thor-text-secondary)" }}>
                                                         <Coffee className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                                                         <span className="truncate">{bk.name}</span>
                                                     </div>
                                                 )}
                                                 {spots.map((s, i) => (
-                                                    <div key={i} className="flex items-center gap-2 text-xs text-white font-medium">
-                                                        <div className="w-1.5 h-1.5 rounded-full bg-yellow-500 shrink-0" />
+                                                    <div key={i} className="flex items-center gap-2 text-xs font-medium" style={{ color: "var(--thor-text)" }}>
+                                                        <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--thor-brand)" }} />
                                                         <span className="truncate">{s.name}</span>
                                                     </div>
                                                 ))}
                                                 {lk && (
-                                                    <div className="flex items-center gap-2 text-xs text-zinc-300">
+                                                    <div className="flex items-center gap-2 text-xs" style={{ color: "var(--thor-text-secondary)" }}>
                                                         <UtensilsCrossed className="w-3.5 h-3.5 text-orange-400 shrink-0" />
                                                         <span className="truncate">{lk.name}</span>
                                                     </div>
                                                 )}
                                                 {dk && (
-                                                    <div className="flex items-center gap-2 text-xs text-zinc-300">
+                                                    <div className="flex items-center gap-2 text-xs" style={{ color: "var(--thor-text-secondary)" }}>
                                                         <Moon className="w-3.5 h-3.5 text-purple-400 shrink-0" />
                                                         <span className="truncate">{dk.name}</span>
                                                     </div>
                                                 )}
                                                 {!bk && !lk && !dk && spots.length === 0 && (
-                                                    <p className="text-xs text-zinc-600 italic">Nothing selected for this day</p>
+                                                    <p className="text-xs italic" style={{ color: "var(--thor-text-muted)" }}>Nothing selected for this day</p>
                                                 )}
                                             </div>
                                         </div>
@@ -799,7 +948,18 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
 
                             <button
                                 onClick={handleConfirmPlan}
-                                className="mt-6 w-full bg-white text-black font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-zinc-200 transition-colors"
+                                className="mt-6 w-full font-bold py-4 rounded-xl flex items-center justify-center gap-2 transition-colors border"
+                                style={{
+                                    background: "var(--thor-text)",
+                                    color: "var(--thor-bg)",
+                                    borderColor: "var(--thor-border)"
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor = "var(--thor-text-secondary)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = "var(--thor-text)";
+                                }}
                             >
                                 {translate("Start My Journey!")} <ArrowRight className="w-4 h-4" />
                             </button>
