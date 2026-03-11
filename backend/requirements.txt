@@ -10,3 +10,5 @@ pydantic[email]>=2.10.0
 python-multipart>=0.0.20
 google-generativeai
 httpx
+google-genai>=0.1.2
+pillow

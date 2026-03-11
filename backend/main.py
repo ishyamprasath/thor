@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, trip, safety, sos, enterprise, translate, cultural_scanner
+from routers import auth, trip, safety, sos, enterprise, translate, memory
 from database import init_sqlite
 
 import os
@@ -27,7 +27,7 @@ app.include_router(safety.router, prefix="/safety", tags=["Safety"])
 app.include_router(sos.router, prefix="/sos", tags=["SOS & Emergency"])
 app.include_router(enterprise.router, prefix="/enterprise", tags=["Enterprise"])
 app.include_router(translate.router, prefix="/translate", tags=["Translation (Gemini)"])
-app.include_router(cultural_scanner.router, prefix="/cultural-scanner", tags=["Cultural Scanner"])
+app.include_router(memory.router, prefix="/api/memory", tags=["AI Memory Completion"])
 
 @app.on_event("startup")
 async def startup():

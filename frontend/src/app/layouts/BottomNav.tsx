@@ -1,5 +1,5 @@
 import { NavLink } from "react-router";
-import { Home, MessageSquare, Mic, Users } from "lucide-react";
+import { Camera, Home, MessageSquare, Mic, Users } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
 
 export default function BottomNav() {
@@ -8,6 +8,7 @@ export default function BottomNav() {
     const navItems = [
         { label: "Home", icon: Home, path: "/dashboard" },
         { label: "Community", icon: Users, path: "/community" },
+        { label: "Memory", icon: Camera, path: "/memory-completion", action: true },
         { label: "AI Chat", icon: MessageSquare, path: "/chat", action: true },
         { label: "Voice AI", icon: Mic, path: "/voice", action: true },
     ];
@@ -22,7 +23,7 @@ export default function BottomNav() {
                 if (item.action) {
                     const getActionColor = () => {
                         if (item.label === "Voice AI") return { bg: "bg-red-500/20", text: "text-red-500", shadow: "239,68,68" };
-                        if (item.label === "Cultural Scanner") return { bg: "bg-yellow-500/20", text: "text-yellow-500", shadow: "234,179,8" };
+                        if (item.label === "Memory") return { bg: "bg-amber-500/20", text: "text-amber-500", shadow: "245,158,11" };
                         return { bg: "bg-blue-500/20", text: "text-blue-500", shadow: "59,130,246" };
                     };
                     const colors = getActionColor();
