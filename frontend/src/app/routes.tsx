@@ -20,6 +20,7 @@ import VoiceAI from "./pages/tourist/VoiceAI";
 import Emergency from "./pages/tourist/Emergency";
 import Profile from "./pages/tourist/Profile";
 import SettingsPage from "./pages/Settings";
+import CulturalScanner from "./pages/tourist/CulturalScanner";
 
 // Enterprise pages
 import EnterpriseHome from './pages/enterprise/EnterpriseHome';
@@ -85,6 +86,7 @@ export const router = createBrowserRouter([
       { path: "/emergency", element: <Emergency /> },
       { path: "/profile", element: <Profile /> },
       { path: "/settings", element: <SettingsPage /> },
+      { path: "/cultural-scanner", element: <CulturalScanner /> },
     ],
   },
 

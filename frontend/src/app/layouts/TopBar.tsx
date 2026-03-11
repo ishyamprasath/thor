@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { User, LogOut, ChevronDown, Settings, Zap, Moon, Sun } from "lucide-react";
+import { User, LogOut, ChevronDown, Settings, Zap, Moon, Sun, Camera } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
@@ -72,6 +72,7 @@ export default function TopBar() {
                                 {[
                                     { icon: User, label: "Profile", action: () => navigate("/profile") },
                                     { icon: Settings, label: "Settings", action: () => navigate("/settings") },
+                                    { icon: Camera, label: "Cultural Scanner", action: () => navigate("/cultural-scanner") },
                                 ].map((item) => {
                                     const Icon = item.icon;
                                     return (

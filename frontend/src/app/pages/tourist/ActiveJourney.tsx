@@ -604,13 +604,13 @@ Return ONLY a strictly valid JSON object with the following structure:
                             <p className="text-zinc-400 mb-8">{translate("It has been 30 minutes since your last check-in. Please confirm you are safe.")}</p>
                             <div className="space-y-3">
                                 <button onClick={handlePulseConfirm} className="w-full bg-green-500 hover:bg-green-400 text-black font-bold py-4 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all">
-                                    ✅ {translate("I am Safe")}
+                                    {translate("I am Safe")}
                                 </button>
                                 <button
                                     onClick={handleNotSafe}
                                     className="w-full bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl shadow-[0_0_25px_rgba(239,68,68,0.5)] transition-all flex items-center justify-center gap-2 animate-pulse"
                                 >
-                                    🚨 {translate("NOT SAFE — Send Emergency Alert")}
+                                    {translate("NOT SAFE - Send Emergency Alert")}
                                 </button>
                             </div>
                         </motion.div>

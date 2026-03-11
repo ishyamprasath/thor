@@ -20,16 +20,23 @@ export default function BottomNav() {
 
                 // Highlight AI actions
                 if (item.action) {
+                    const getActionColor = () => {
+                        if (item.label === "Voice AI") return { bg: "bg-red-500/20", text: "text-red-500", shadow: "239,68,68" };
+                        if (item.label === "Cultural Scanner") return { bg: "bg-yellow-500/20", text: "text-yellow-500", shadow: "234,179,8" };
+                        return { bg: "bg-blue-500/20", text: "text-blue-500", shadow: "59,130,246" };
+                    };
+                    const colors = getActionColor();
+
                     return (
                         <NavLink
                             key={item.label}
                             to={item.path}
                             className={({ isActive }) =>
-                                `flex flex-col items-center justify-center gap-1 min-w-[64px] transition-all duration-300 ${isActive ? (item.label === "Voice AI" ? "text-red-500 scale-110" : "text-blue-500 scale-110") : ""}`
+                                `flex flex-col items-center justify-center gap-1 min-w-[64px] transition-all duration-300 ${isActive ? `${colors.text} scale-110` : ""}`
                             }
                             style={({ isActive }) => (!isActive ? { color: "var(--thor-text-secondary)" } : {})}
                         >
-                            <div className={`p-3 rounded-full ${item.label === "Voice AI" ? "bg-red-500/20 text-red-500" : "bg-blue-500/20 text-blue-500"} shadow-[0_0_15px_rgba(${item.label === 'Voice AI' ? '239,68,68' : '59,130,246'},0.2)]`}>
+                            <div className={`p-3 rounded-full ${colors.bg} ${colors.text} shadow-[0_0_15px_rgba(${colors.shadow},0.2)]`}>
                                 <Icon className="w-6 h-6" />
                             </div>
                             <span className="text-[10px] font-bold uppercase tracking-wider mt-1">{item.label}</span>
