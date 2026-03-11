@@ -1,8 +1,9 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, User, LogOut, ChevronDown, Settings, Zap, Moon, Sun } from "lucide-react";
+import { User, LogOut, ChevronDown, Settings, Zap, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
+import NotificationDropdown from "../components/NotificationDropdown";
 
 export default function TopBar() {
     const navigate = useNavigate();
@@ -43,13 +44,7 @@ export default function TopBar() {
                 </button>
 
                 {/* Notifications */}
-                <button
-                    className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:bg-zinc-800"
-                    style={{ color: "var(--thor-text-secondary)" }}
-                >
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-2 right-2.5 w-2 h-2 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)]" />
-                </button>
+                <NotificationDropdown />
 
                 {/* Profile dropdown */}
                 <div className="relative" ref={profileRef}>
