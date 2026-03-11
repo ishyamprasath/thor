@@ -211,48 +211,77 @@ export default function Dashboard() {
           {loadingGuides ? (
             <div className="flex gap-4 overflow-x-auto pb-4 noscrollbar">
               {[1, 2, 3].map(i => (
-                <div key={i} className="min-w-[280px] h-36 bg-zinc-900 border border-zinc-800 rounded-2xl animate-pulse" />
+                <div key={i} className="min-w-[280px] h-36 rounded-2xl animate-pulse border" 
+                     style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }} />
               ))}
             </div>
           ) : guides.length > 0 ? (
             <div className="flex gap-4 overflow-x-auto pb-4 noscrollbar">
               {guides.map((g, i) => (
-                <div key={i} className="min-w-[280px] bg-zinc-900 border border-zinc-800 rounded-2xl p-4 flex flex-col justify-between">
+                <div key={i} className="min-w-[280px] rounded-2xl p-4 flex flex-col justify-between border" 
+                     style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }}>
                   <div>
                     <div className="flex justify-between items-start mb-1">
-                      <h4 className="font-bold text-white text-[15px] truncate max-w-[170px]">{g.name}</h4>
-                      <span className="flex items-center gap-1 text-xs text-yellow-500 font-bold bg-yellow-500/10 px-2 py-0.5 rounded-md shrink-0">
-                        <Star className="w-3 h-3 fill-yellow-500" /> {g.rating}
+                      <h4 className="font-bold text-[15px] truncate max-w-[170px]" style={{ color: "var(--thor-text)" }}>{g.name}</h4>
+                      <span className="flex items-center gap-1 text-xs font-bold px-2 py-0.5 rounded-md shrink-0"
+                            style={{ color: "#eab308", background: "rgba(234, 179, 8, 0.1)" }}>
+                        <Star className="w-3 h-3" style={{ fill: "#eab308" }} /> {g.rating}
                       </span>
                     </div>
-                    <p className="text-xs text-zinc-400 mb-2 line-clamp-2">{g.role}</p>
+                    <p className="text-xs mb-2 line-clamp-2" style={{ color: "var(--thor-text-muted)" }}>{g.role}</p>
                     <div className="flex items-center gap-1.5 flex-wrap">
                       {g.languages?.map((l: string, idx: number) => (
-                        <span key={idx} className="text-[10px] bg-zinc-800 text-zinc-300 px-2 py-0.5 rounded border border-zinc-700">{l}</span>
+                        <span key={idx} className="text-[10px] px-2 py-0.5 rounded border" 
+                              style={{ 
+                                background: "var(--thor-surface-3)", 
+                                color: "var(--thor-text-muted)",
+                                borderColor: "var(--thor-border)"
+                              }}>{l}</span>
                       ))}
                     </div>
                   </div>
-                  <div className="mt-4 pt-3 border-t border-zinc-800 flex justify-between items-center">
-                    <span className="text-[11px] font-semibold text-green-400 max-w-[100px] truncate">{g.price}</span>
+                  <div className="mt-4 pt-3 flex justify-between items-center" 
+                       style={{ borderTop: `1px solid var(--thor-border)` }}>
+                    <span className="text-[11px] font-semibold max-w-[100px] truncate" style={{ color: "#22c55e" }}>{g.price}</span>
                     <div className="flex gap-2">
                       <a href={`https://www.google.com/maps/place/?q=place_id:${g.id}`} target="_blank" rel="noreferrer"
-                        className="flex items-center gap-1.5 text-xs text-black bg-white hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                        style={{ 
+                          color: "#000", 
+                          background: "#fff", 
+                          border: "1px solid var(--thor-border)"
+                        }}>
                         <MapPin className="w-3.5 h-3.5" /> Map
                       </a>
                       {g.website ? (
                         <a href={g.website} target="_blank" rel="noreferrer"
-                          className="flex items-center gap-1.5 text-xs text-black bg-white hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          style={{ 
+                            color: "#000", 
+                            background: "#fff", 
+                            border: "1px solid var(--thor-border)"
+                          }}>
                           <ExternalLink className="w-3.5 h-3.5" /> Site
                         </a>
                       ) : (
                         <a href={`https://www.google.com/search?q=${encodeURIComponent(g.name + ' tour guide ' + activePlans[0].destination)}`} target="_blank" rel="noreferrer"
-                          className="flex items-center gap-1.5 text-xs text-black bg-white hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          style={{ 
+                            color: "#000", 
+                            background: "#fff", 
+                            border: "1px solid var(--thor-border)"
+                          }}>
                           <Search className="w-3.5 h-3.5" /> Search
                         </a>
                       )}
                       {g.phone && (
                         <a href={`tel:${g.phone}`}
-                          className="flex items-center gap-1.5 text-xs text-black bg-white hover:bg-zinc-200 px-3 py-1.5 rounded-lg font-bold transition-colors">
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-bold transition-colors"
+                          style={{ 
+                            color: "#000", 
+                            background: "#fff", 
+                            border: "1px solid var(--thor-border)"
+                          }}>
                           <Phone className="w-3.5 h-3.5" /> Call
                         </a>
                       )}

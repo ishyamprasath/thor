@@ -72,16 +72,18 @@ export default function Community() {
     }
 
     return (
-        <div className="w-full max-w-2xl mx-auto min-h-screen bg-black border-x border-zinc-800 pb-24">
+        <div className="w-full max-w-2xl mx-auto min-h-screen pb-24" style={{ background: "var(--thor-bg)", color: "var(--thor-text)" }}>
             {/* Header */}
-            <div className="sticky top-0 z-20 bg-black/80 backdrop-blur-xl border-b border-zinc-800 px-4 py-3 flex items-center justify-between cursor-pointer">
-                <h1 className="text-xl font-bold text-white">{translate("Community")}</h1>
-                <Sparkles className="w-5 h-5 text-white" />
+            <div className="sticky top-0 z-10 backdrop-blur-xl border-b px-4 py-3 flex items-center justify-between cursor-pointer" 
+                 style={{ background: "var(--thor-surface)", borderColor: "var(--thor-border)" }}>
+                <h1 className="text-xl font-bold">{translate("Community")}</h1>
+                <Sparkles className="w-5 h-5" />
             </div>
 
             {/* Compose Area */}
-            <div className="flex gap-4 p-4 border-b border-zinc-800">
-                <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-white shrink-0">
+            <div className="flex gap-4 p-4 border-b" style={{ borderColor: "var(--thor-border)" }}>
+                <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0" 
+                     style={{ background: "var(--thor-surface-2)", color: "var(--thor-text)" }}>
                     U
                 </div>
                 <div className="flex-1">
@@ -89,20 +91,27 @@ export default function Community() {
                         value={composeText}
                         onChange={(e) => setComposeText(e.target.value)}
                         placeholder={translate("What's happening in your journey?")}
-                        className="w-full bg-transparent text-white text-lg resize-none outline-none placeholder:text-zinc-500 min-h-[50px]"
+                        className="w-full text-lg resize-none outline-none min-h-[50px]"
+                        style={{ 
+                            background: "transparent", 
+                            color: "var(--thor-text)"
+                        }}
                     />
                     {selectedImage && (
-                        <div className="relative mt-3 mb-2 rounded-2xl overflow-hidden border border-zinc-800 w-fit">
+                        <div className="relative mt-3 mb-2 rounded-2xl overflow-hidden border w-fit" 
+                             style={{ borderColor: "var(--thor-border)" }}>
                             <img src={selectedImage} alt="Preview" className="max-h-[300px] w-auto object-cover" />
                             <button
                                 onClick={() => setSelectedImage(null)}
-                                className="absolute top-2 right-2 bg-black/60 hover:bg-black/80 text-white p-1.5 rounded-full backdrop-blur-md transition-colors"
+                                className="absolute top-2 right-2 p-1.5 rounded-full backdrop-blur-md transition-colors"
+                                style={{ background: "rgba(0,0,0,0.6)", color: "white" }}
                             >
                                 <X className="w-4 h-4" />
                             </button>
                         </div>
                     )}
-                    <div className="flex items-center justify-between pt-3 border-t border-zinc-800/50 mt-2">
+                    <div className="flex items-center justify-between pt-3 mt-2" 
+                         style={{ borderTop: `1px solid var(--thor-border)`, opacity: 0.5 }}>
                         <div className="flex gap-4">
                             <input
                                 type="file"
@@ -113,18 +122,25 @@ export default function Community() {
                             />
                             <button
                                 onClick={() => fileInputRef.current?.click()}
-                                className="text-blue-500 hover:bg-blue-500/10 p-2 rounded-full transition-colors"
+                                className="p-2 rounded-full transition-colors"
+                                style={{ color: "#3b82f6" }}
                             >
                                 <ImageIcon className="w-5 h-5" />
                             </button>
-                            <button className="text-blue-500 hover:bg-blue-500/10 p-2 rounded-full transition-colors">
+                            <button className="p-2 rounded-full transition-colors" 
+                                    style={{ color: "#3b82f6" }}>
                                 <MapPin className="w-5 h-5" />
                             </button>
                         </div>
                         <button
                             onClick={handlePost}
                             disabled={!composeText.trim() && !selectedImage}
-                            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:hover:bg-blue-500 text-white font-bold px-4 py-1.5 rounded-full transition-colors"
+                            className="font-bold px-4 py-1.5 rounded-full transition-colors"
+                            style={{ 
+                                background: "#3b82f6", 
+                                color: "white",
+                                opacity: (!composeText.trim() && !selectedImage) ? 0.5 : 1
+                            }}
                         >
                             {translate("Post")}
                         </button>
@@ -139,10 +155,15 @@ export default function Community() {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         key={post.id}
-                        className="p-4 border-b border-zinc-800 hover:bg-zinc-900/30 transition-colors cursor-pointer flex gap-3"
+                        className="p-4 border-b transition-colors cursor-pointer flex gap-3"
+                        style={{ 
+                            borderColor: "var(--thor-border)",
+                            color: "var(--thor-text)"
+                        }}
                     >
                         {/* Avatar */}
-                        <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-white shrink-0">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold shrink-0" 
+                             style={{ background: "var(--thor-surface-2)", color: "var(--thor-text)" }}>
                             {post.author.avatar}
                         </div>
 
@@ -150,21 +171,23 @@ export default function Community() {
                         <div className="flex-1 min-w-0">
                             {/* Author Row */}
                             <div className="flex items-center gap-1 text-sm mb-1">
-                                <span className="font-bold text-white truncate">{post.author.name}</span>
+                                <span className="font-bold truncate" style={{ color: "var(--thor-text)" }}>{post.author.name}</span>
                                 {post.author.verified && <BadgeCheck className="w-4 h-4 text-blue-500 shrink-0" />}
-                                <span className="text-zinc-500 truncate">{post.author.handle}</span>
-                                <span className="text-zinc-500">·</span>
-                                <span className="text-zinc-500">{post.time}</span>
+                                <span className="truncate" style={{ color: "var(--thor-text-muted)" }}>{post.author.handle}</span>
+                                <span style={{ color: "var(--thor-text-muted)" }}>·</span>
+                                <span style={{ color: "var(--thor-text-muted)" }}>{post.time}</span>
                             </div>
 
                             {/* Text */}
-                            <p className="text-white text-[15px] leading-snug mb-3 whitespace-pre-wrap">
+                            <p className="text-[15px] leading-snug mb-3 whitespace-pre-wrap" 
+                               style={{ color: "var(--thor-text)" }}>
                                 {post.content}
                             </p>
 
                             {/* Image Attachment */}
                             {post.image && (
-                                <div className="mb-3 rounded-2xl overflow-hidden border border-zinc-800">
+                                <div className="mb-3 rounded-2xl overflow-hidden border" 
+                                     style={{ borderColor: "var(--thor-border)" }}>
                                     <img src={post.image} alt="Post Attachment" className="w-full max-h-[400px] object-cover" />
                                 </div>
                             )}
@@ -178,7 +201,8 @@ export default function Community() {
                             )}
 
                             {/* Actions Row */}
-                            <div className="flex items-center justify-between text-zinc-500 max-w-md">
+                            <div className="flex items-center justify-between max-w-md" 
+                                 style={{ color: "var(--thor-text-muted)" }}>
                                 <button className="flex items-center gap-2 hover:text-blue-500 group transition-colors">
                                     <div className="p-2 rounded-full group-hover:bg-blue-500/10 transition-colors">
                                         <MessageCircle className="w-[18px] h-[18px]" />

@@ -25,7 +25,7 @@ const SUGGESTIONS = [
 
 // ─── Command to Icon mapping for UI feedback ─────────────────────────────────
 function CommandChip({ cmd }: { cmd: any }) {
-    const icons: Record<string, JSX.Element> = {
+    const icons: Record<string, React.ReactElement> = {
         navigate: <Navigation className="w-3.5 h-3.5" />,
         auto_plan: <MapPin className="w-3.5 h-3.5" />,
         open_planner: <MapPin className="w-3.5 h-3.5" />,
@@ -181,19 +181,21 @@ export default function GlobalChatbot() {
 
     // ─── UI ──────────────────────────────────────────────────────────────────
     return (
-        <div className="h-full flex flex-col bg-black" style={{ minHeight: 0 }}>
+        <div className="h-full flex flex-col" style={{ minHeight: 0, background: "var(--thor-bg)" }}>
             {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 bg-zinc-950 shrink-0">
+            <div className="flex items-center justify-between px-5 py-4 shrink-0 border-b" 
+                 style={{ background: "var(--thor-surface)", borderColor: "var(--thor-border)" }}>
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-cyan-500 shadow-[0_0_15px_rgba(59,130,246,0.4)]">
                         <MessageSquare className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-base font-black text-white tracking-tight">{translate("THOR AI")}</h1>
-                        <p className="text-[10px] text-zinc-500">gemini-3.1-flash-lite-preview · {translate("Fully Automated")}</p>
+                        <h1 className="text-base font-black tracking-tight" style={{ color: "var(--thor-text)" }}>{translate("THOR AI")}</h1>
+                        <p className="text-[10px]" style={{ color: "var(--thor-text-muted)" }}>gemini-3.1-flash-lite-preview · {translate("Fully Automated")}</p>
                     </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[10px] font-bold text-green-400 bg-green-400/10 border border-green-400/20 px-2.5 py-1 rounded-full">
+                <div className="flex items-center gap-1.5 text-[10px] font-bold px-2.5 py-1 rounded-full"
+                     style={{ color: "#22c55e", background: "rgba(34, 197, 94, 0.1)", borderColor: "rgba(34, 197, 94, 0.2)", border: "1px solid" }}>
                     <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                     {translate("Online")}
                 </div>
@@ -212,8 +214,14 @@ export default function GlobalChatbot() {
                             {/* Avatar */}
                             <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${msg.role === "ai"
                                 ? "bg-gradient-to-br from-blue-600 to-cyan-500 text-white"
-                                : "bg-zinc-800 border border-zinc-700 text-zinc-300"
-                                }`}>
+                                : ""
+                                }`}
+                                style={msg.role === "user" ? {
+                                    background: "var(--thor-surface-2)", 
+                                    borderColor: "var(--thor-border)", 
+                                    color: "var(--thor-text-muted)",
+                                    border: "1px solid"
+                                } : {}}>
                                 {msg.role === "ai" ? <Zap className="w-4 h-4" fill="currentColor" /> : <User className="w-4 h-4" />}
                             </div>
 
@@ -222,13 +230,24 @@ export default function GlobalChatbot() {
                                 <div className={`rounded-2xl px-4 py-3 shadow-lg ${msg.role === "user"
                                     ? "bg-blue-600 text-white rounded-br-sm"
                                     : msg.isExecuting
-                                        ? "bg-yellow-500/10 border border-yellow-500/30 text-yellow-200 rounded-bl-sm"
-                                        : "bg-zinc-900 border border-zinc-800 text-zinc-200 rounded-bl-sm"
-                                    }`}>
+                                        ? "rounded-bl-sm"
+                                        : "rounded-bl-sm"
+                                    }`}
+                                    style={msg.role === "user" ? {} : msg.isExecuting ? {
+                                        background: "rgba(234, 179, 8, 0.1)",
+                                        borderColor: "rgba(234, 179, 8, 0.3)",
+                                        color: "#fef3c7",
+                                        border: "1px solid"
+                                    } : {
+                                        background: "var(--thor-surface-2)",
+                                        borderColor: "var(--thor-border)",
+                                        color: "var(--thor-text)",
+                                        border: "1px solid"
+                                    }}>
                                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{msg.content}</p>
                                     {msg.command && <CommandChip cmd={msg.command} />}
                                 </div>
-                                <p className="text-[10px] text-zinc-600 mt-1 px-1">
+                                <p className="text-[10px] mt-1 px-1" style={{ color: "var(--thor-text-muted)" }}>
                                     {msg.timestamp.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
                                 </p>
                             </div>
@@ -242,10 +261,15 @@ export default function GlobalChatbot() {
                         <div className="w-8 h-8 rounded-xl flex items-center justify-center bg-gradient-to-br from-blue-600 to-cyan-500 text-white">
                             <Loader2 className="w-4 h-4 animate-spin" />
                         </div>
-                        <div className="bg-zinc-900 border border-zinc-800 rounded-2xl rounded-bl-sm px-4 py-3">
+                        <div className="rounded-2xl rounded-bl-sm px-4 py-3"
+                             style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)", border: "1px solid" }}>
                             <div className="flex gap-1">
                                 {[0, 1, 2].map(i => (
-                                    <div key={i} className="w-1.5 h-1.5 rounded-full bg-zinc-500 animate-bounce" style={{ animationDelay: `${i * 0.15}s` }} />
+                                    <div key={i} className="w-1.5 h-1.5 rounded-full animate-bounce" 
+                                         style={{ 
+                                             background: "var(--thor-text-muted)",
+                                             animationDelay: `${i * 0.15}s` 
+                                         }} />
                                 ))}
                             </div>
                         </div>
@@ -256,11 +280,24 @@ export default function GlobalChatbot() {
             {/* Quick suggestions */}
             {messages.length <= 1 && (
                 <div className="px-4 pb-3 shrink-0">
-                    <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-2">{translate("Try asking:")}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-widest mb-2" style={{ color: "var(--thor-text-muted)" }}>{translate("Try asking:")}</p>
                     <div className="flex flex-wrap gap-2">
                         {SUGGESTIONS.map((s, i) => (
                             <button key={i} onClick={() => sendMessage(s.text)}
-                                className="flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-600 text-zinc-400 hover:text-white px-3 py-1.5 rounded-lg text-xs transition-all">
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-all border"
+                                style={{
+                                    background: "var(--thor-surface-2)",
+                                    borderColor: "var(--thor-border)",
+                                    color: "var(--thor-text-muted)"
+                                }}
+                                onMouseEnter={(e) => {
+                                    e.currentTarget.style.background = "var(--thor-surface-3)";
+                                    e.currentTarget.style.color = "var(--thor-text)";
+                                }}
+                                onMouseLeave={(e) => {
+                                    e.currentTarget.style.background = "var(--thor-surface-2)";
+                                    e.currentTarget.style.color = "var(--thor-text-muted)";
+                                }}>
                                 {s.icon} {s.text}
                             </button>
                         ))}
@@ -269,7 +306,8 @@ export default function GlobalChatbot() {
             )}
 
             {/* Input bar */}
-            <div className="px-4 py-3 bg-zinc-950 border-t border-zinc-800 shrink-0">
+            <div className="px-4 py-3 shrink-0 border-t" 
+                 style={{ background: "var(--thor-surface)", borderColor: "var(--thor-border)" }}>
                 <div className="flex gap-2">
                     <input
                         type="text"
@@ -277,7 +315,12 @@ export default function GlobalChatbot() {
                         onChange={e => setInput(e.target.value)}
                         onKeyDown={e => e.key === "Enter" && sendMessage()}
                         placeholder={translate("Tell THOR where you want to go...")}
-                        className="flex-1 bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-2.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:border-blue-500 focus:bg-black transition-all"
+                        className="flex-1 rounded-xl px-4 py-2.5 text-sm transition-all border"
+                        style={{
+                            background: "var(--thor-surface-2)",
+                            borderColor: "var(--thor-border)",
+                            color: "var(--thor-text)"
+                        }}
                     />
                     <button
                         onClick={() => sendMessage()}

@@ -1,11 +1,13 @@
 import { useState, useRef, useEffect } from "react";
-import { Bell, User, LogOut, ChevronDown, Settings, Zap } from "lucide-react";
+import { Bell, User, LogOut, ChevronDown, Settings, Zap, Moon, Sun } from "lucide-react";
 import { useNavigate } from "react-router";
 import { useAuth } from "../context/AuthContext";
+import { useTheme } from "../context/ThemeContext";
 
 export default function TopBar() {
     const navigate = useNavigate();
     const { user, logout } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const [showProfile, setShowProfile] = useState(false);
     const profileRef = useRef<HTMLDivElement>(null);
 
@@ -30,6 +32,16 @@ export default function TopBar() {
             </div>
 
             <div className="flex items-center gap-4">
+                {/* Theme Toggle */}
+                <button
+                    onClick={toggleTheme}
+                    className="flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:bg-zinc-800"
+                    style={{ color: "var(--thor-text-secondary)" }}
+                    title="Toggle theme"
+                >
+                    {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                </button>
+
                 {/* Notifications */}
                 <button
                     className="relative flex items-center justify-center w-10 h-10 rounded-xl transition-all hover:bg-zinc-800"

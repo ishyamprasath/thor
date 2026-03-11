@@ -10,7 +10,7 @@ import { useNavigate } from "react-router";
 import { useTranslation } from "../../context/TranslationContext";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-const GEMINI_API_KEY = import.meta.env.VITE_PUBLIC_GEMINI_API_KEY;
+const GEMINI_API_KEY = (import.meta as any).env.VITE_PUBLIC_GEMINI_API_KEY;
 const GOOGLE_MAPS_KEY = (import.meta as any).env.VITE_PUBLIC_GOOGLE_MAPS_API_KEY;
 const LIBS: ("places")[] = ["places"];
 
@@ -168,6 +168,14 @@ export default function TripPlanner() {
     const [destination, setDestination] = useState("");
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    
+    // Additional traveler factors
+    const [travelerAge, setTravelerAge] = useState("");
+    const [travelerGroup, setTravelerGroup] = useState("solo");
+    const [budgetLevel, setBudgetLevel] = useState("moderate");
+    const [travelInterests, setTravelInterests] = useState<string[]>([]);
+    const [travelPace, setTravelPace] = useState("balanced");
+    const [dietaryPreference, setDietaryPreference] = useState("none");
 
     // Suggestions from Gemini
     const [suggestions, setSuggestions] = useState<Suggestions | null>(null);
@@ -234,6 +242,31 @@ export default function TripPlanner() {
         const daysArr = Array.from({ length: numDays }, (_, i) => i + 1);
 
         const prompt = `You are an elite travel concierge. The traveler is going to ${destination} from ${startDate} to ${endDate} (${numDays} days).
+
+Traveler Profile:
+- Age: ${travelerAge || 'Not specified'}
+- Group Type: ${travelerGroup}
+- Budget Level: ${budgetLevel}
+- Interests: ${travelInterests.length > 0 ? travelInterests.join(', ') : 'Not specified'}
+- Travel Pace: ${travelPace}
+- Dietary Preference: ${dietaryPreference !== 'none' ? dietaryPreference : 'Not specified'}
+
+Generate recommendations based on this profile:
+${budgetLevel === 'budget' ? 'Focus on value-for-money options and local experiences.' : ''}
+${budgetLevel === 'luxury' ? 'Include premium experiences and high-end recommendations.' : ''}
+${travelerGroup === 'family' ? 'Ensure family-friendly options and activities suitable for all ages.' : ''}
+${travelerAge && parseInt(travelerAge) < 30 ? 'Include adventurous and social experiences.' : ''}
+${travelerAge && parseInt(travelerAge) > 50 ? 'Prioritize comfort, accessibility, and cultural experiences.' : ''}
+${travelPace === 'relaxed' ? 'Focus on fewer activities with more time to enjoy each location.' : ''}
+${travelPace === 'fast-paced' ? 'Pack each day with multiple activities and experiences.' : ''}
+${dietaryPreference !== 'none' ? `Ensure all food recommendations cater to ${dietaryPreference} dietary requirements.` : ''}
+${travelInterests.includes('Food') ? 'Include food tours, cooking classes, and local culinary experiences.' : ''}
+${travelInterests.includes('Culture') ? 'Focus on museums, historical sites, and cultural activities.' : ''}
+${travelInterests.includes('Nature') ? 'Include parks, hiking, outdoor activities, and natural attractions.' : ''}
+${travelInterests.includes('Nightlife') ? 'Include bars, clubs, and evening entertainment options.' : ''}
+${travelInterests.includes('Shopping') ? 'Include markets, malls, and local shopping experiences.' : ''}
+${travelInterests.includes('Adventure') ? 'Include adventure sports, thrilling activities, and extreme experiences.' : ''}
+${travelInterests.includes('Photography') ? 'Include scenic viewpoints, photogenic locations, and photography spots.' : ''}
 
 Generate multiple REAL, SPECIFIC options for each category. Return ONLY valid JSON with this exact structure:
 {
@@ -414,6 +447,101 @@ Use REAL, SPECIFIC place names and ROUGHLY ACCURATE coordinates for ${destinatio
                                                 className="w-full bg-black border border-zinc-800 rounded-xl py-3 pl-10 pr-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
                                             />
                                         </div>
+                                    </div>
+                                </div>
+
+                                {/* Additional Traveler Information */}
+                                <div className="space-y-4 mt-6">
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Traveler Age</label>
+                                        <input
+                                            type="number"
+                                            value={travelerAge}
+                                            onChange={(e) => setTravelerAge(e.target.value)}
+                                            placeholder="e.g., 25"
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Group Type</label>
+                                        <select
+                                            value={travelerGroup}
+                                            onChange={(e) => setTravelerGroup(e.target.value)}
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                        >
+                                            <option value="solo">Solo Traveler</option>
+                                            <option value="couple">Couple</option>
+                                            <option value="family">Family</option>
+                                            <option value="friends">Group of Friends</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Budget Level</label>
+                                        <select
+                                            value={budgetLevel}
+                                            onChange={(e) => setBudgetLevel(e.target.value)}
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                        >
+                                            <option value="budget">Budget ($)</option>
+                                            <option value="moderate">Moderate ($$)</option>
+                                            <option value="luxury">Luxury ($$$)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Travel Interests (Select multiple)</label>
+                                        <div className="grid grid-cols-2 gap-2">
+                                            {['Food', 'Culture', 'Nature', 'Nightlife', 'Shopping', 'Adventure', 'Photography'].map((interest) => (
+                                                <label key={interest} className="flex items-center gap-2 p-2 border border-zinc-800 rounded-lg cursor-pointer hover:border-yellow-500">
+                                                    <input
+                                                        type="checkbox"
+                                                        checked={travelInterests.includes(interest)}
+                                                        onChange={(e) => {
+                                                            if (e.target.checked) {
+                                                                setTravelInterests([...travelInterests, interest]);
+                                                            } else {
+                                                                setTravelInterests(travelInterests.filter(i => i !== interest));
+                                                            }
+                                                        }}
+                                                        className="w-4 h-4 text-yellow-500 bg-black border-zinc-800 rounded focus:ring-yellow-500 focus:ring-2"
+                                                    />
+                                                    <span className="text-sm text-white">{interest}</span>
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Travel Pace</label>
+                                        <select
+                                            value={travelPace}
+                                            onChange={(e) => setTravelPace(e.target.value)}
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                        >
+                                            <option value="relaxed">Relaxed (Fewer activities, more time to enjoy)</option>
+                                            <option value="balanced">Balanced (Good mix of activities and free time)</option>
+                                            <option value="fast-paced">Fast-paced (Packed with activities)</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest mb-2 block">Dietary Preference</label>
+                                        <select
+                                            value={dietaryPreference}
+                                            onChange={(e) => setDietaryPreference(e.target.value)}
+                                            className="w-full bg-black border border-zinc-800 rounded-xl py-3 px-3 text-white focus:outline-none focus:border-yellow-500 [color-scheme:dark]"
+                                        >
+                                            <option value="none">No restrictions</option>
+                                            <option value="vegetarian">Vegetarian</option>
+                                            <option value="vegan">Vegan</option>
+                                            <option value="halal">Halal</option>
+                                            <option value="kosher">Kosher</option>
+                                            <option value="gluten-free">Gluten-free</option>
+                                            <option value="dairy-free">Dairy-free</option>
+                                            <option value="nut-free">Nut-free</option>
+                                        </select>
                                     </div>
                                 </div>
 

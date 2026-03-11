@@ -29,7 +29,7 @@ export default function VoiceAI() {
     const [started, setStarted] = useState(false); // require tap to unlock audio
     const [liveText, setLiveText] = useState("");         // what the user is saying right now (interim)
     const [aiText, setAiText] = useState("");         // what the AI replied
-    const [statusMsg, setStatusMsg] = useState("Tap Allow to activate THOR Voice");
+    const [statusMsg, setStatusMsg] = useState("");
 
     const finalRef = useRef("");   // final transcript accumulator
     const interimRef = useRef("");   // live interim text
@@ -305,10 +305,12 @@ export default function VoiceAI() {
                 phase === "speaking" ? "bg-blue-500/25" : "bg-transparent";
 
     return (
-        <div className="w-full h-full min-h-[80vh] flex flex-col items-center justify-center relative p-6 bg-black overflow-hidden">
+        <div className="w-full h-full min-h-[80vh] flex flex-col items-center justify-center relative p-6 overflow-hidden" 
+             style={{ background: "var(--thor-bg)" }}>
 
             {!started && (
-                <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center">
+                <div className="absolute inset-0 z-50 backdrop-blur-md flex flex-col items-center justify-center" 
+                     style={{ background: "rgba(0,0,0,0.8)" }}>
                     <button
                         onClick={handleStart}
                         className="w-48 h-48 rounded-full bg-blue-500 hover:bg-blue-600 shadow-[0_0_50px_rgba(59,130,246,0.5)] flex flex-col items-center justify-center text-white transition-all transform hover:scale-105 active:scale-95 duration-200"
@@ -317,21 +319,11 @@ export default function VoiceAI() {
                         <span className="font-bold text-lg">Tap to Start</span>
                         <span className="text-xs text-blue-200 font-medium">THOR Voice Agent</span>
                     </button>
-                    <p className="mt-8 text-sm text-zinc-500 max-w-xs text-center">
+                    <p className="mt-24 text-sm max-w-xs text-center" style={{ color: "var(--thor-text-muted)" }}>
                         Interaction requires manual activation to enable live AI speech synthesis.
                     </p>
                 </div>
             )}
-
-            {/* Status badge */}
-            <div className={`absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-1.5 rounded-full border text-xs font-bold uppercase tracking-widest transition-all duration-500 ${phase === "listening" ? "bg-red-500/10 border-red-500/30 text-red-400" :
-                phase === "processing" ? "bg-yellow-500/10 border-yellow-500/30 text-yellow-400" :
-                    phase === "speaking" ? "bg-blue-500/10 border-blue-500/30 text-blue-400" :
-                        "bg-zinc-900 border-zinc-700 text-zinc-500"
-                }`}>
-                <Zap className="w-3 h-3" fill="currentColor" />
-                THOR Voice · {GEMINI_MODEL}
-            </div>
 
             {/* Orb */}
             <div className="relative flex items-center justify-center mb-10 mt-14">
@@ -363,12 +355,11 @@ export default function VoiceAI() {
             </div>
 
             {/* Phase label */}
-            <h2 className="text-2xl font-black text-white tracking-tight mb-1">
+            <h2 className="text-2xl font-black tracking-tight mb-6" style={{ color: "var(--thor-text)" }}>
                 {phase === "listening" ? "Listening..." :
                     phase === "processing" ? "Processing" :
                         phase === "speaking" ? "THOR Speaking" : "Voice Agent"}
             </h2>
-            <p className="text-sm text-zinc-500 mb-6">{statusMsg}</p>
 
             {/* Live transcript bubble */}
             <AnimatePresence>
@@ -376,10 +367,11 @@ export default function VoiceAI() {
                     <motion.div
                         key="live"
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="max-w-sm w-full bg-zinc-900 border border-zinc-700 rounded-2xl px-5 py-3 mb-4"
+                        className="max-w-sm w-full rounded-2xl px-5 py-3 mb-4 border"
+                        style={{ background: "var(--thor-surface-2)", borderColor: "var(--thor-border)" }}
                     >
-                        <p className="text-xs text-zinc-500 font-bold uppercase tracking-widest mb-1">You said</p>
-                        <p className="text-white text-sm leading-relaxed">{liveText}</p>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "var(--thor-text-muted)" }}>You said</p>
+                        <p className="text-sm leading-relaxed" style={{ color: "var(--thor-text)" }}>{liveText}</p>
                     </motion.div>
                 )}
 
@@ -388,10 +380,11 @@ export default function VoiceAI() {
                     <motion.div
                         key="ai"
                         initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        className="max-w-sm w-full bg-blue-500/10 border border-blue-500/20 rounded-2xl px-5 py-3 mb-4"
+                        className="max-w-sm w-full rounded-2xl px-5 py-3 mb-4 border"
+                        style={{ background: "rgba(59,130,246,0.1)", borderColor: "rgba(59,130,246,0.2)" }}
                     >
-                        <p className="text-xs text-blue-400 font-bold uppercase tracking-widest mb-1">THOR AI</p>
-                        <p className="text-blue-100 text-sm leading-relaxed">{aiText}</p>
+                        <p className="text-xs font-bold uppercase tracking-widest mb-1" style={{ color: "#60a5fa" }}>THOR AI</p>
+                        <p className="text-sm leading-relaxed" style={{ color: "#dbeafe" }}>{aiText}</p>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -412,7 +405,7 @@ export default function VoiceAI() {
             {/* Manual suggestion pills (always visible when idle/listening) */}
             {(phase === "listening" || phase === "error") && !liveText && (
                 <div className="mt-8 w-full max-w-sm space-y-2">
-                    <p className="text-[10px] font-bold tracking-widest text-zinc-600 uppercase text-center mb-3">
+                    <p className="text-[10px] font-bold tracking-widest uppercase text-center mb-3" style={{ color: "var(--thor-text-muted)" }}>
                         Or tap a command
                     </p>
                     {[
@@ -422,7 +415,20 @@ export default function VoiceAI() {
                         "I need emergency help",
                     ].map((s, i) => (
                         <button key={i} onClick={() => processCommand(s)}
-                            className="w-full text-left px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-400 text-sm hover:border-zinc-500 hover:text-white transition-all">
+                            className="w-full text-left px-4 py-2.5 rounded-xl text-sm transition-all border"
+                            style={{
+                                background: "var(--thor-surface-2)",
+                                borderColor: "var(--thor-border)",
+                                color: "var(--thor-text-muted)"
+                            }}
+                            onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = "var(--thor-text)";
+                                e.currentTarget.style.color = "var(--thor-text)";
+                            }}
+                            onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = "var(--thor-border)";
+                                e.currentTarget.style.color = "var(--thor-text-muted)";
+                            }}>
                             "{s}"
                         </button>
                     ))}
